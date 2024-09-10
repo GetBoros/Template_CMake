@@ -4,7 +4,13 @@ set(CMAKE_WIN32_EXECUTABLE TRUE)  # Use WinMain
 
 include_directories("Include")  # find includes here
 
-add_executable(Editor Include/Main.cpp )  # start point
+add_executable(Editor
+		Include/Main.cpp  # start point
+		Include/Main.h )
+
+source_group("Main" FILES 
+		${CMAKE_CURRENT_SOURCE_DIR}/Include/Main.h
+		${CMAKE_CURRENT_SOURCE_DIR}/Include/Main.cpp )
 
 target_link_libraries(Editor PRIVATE Engine)  # Добавляем зависимость от библиотеки движка
 target_include_directories(Editor PRIVATE ${CMAKE_SOURCE_DIR}/Engine/Include)  # From CMake Source direction to engine includes
