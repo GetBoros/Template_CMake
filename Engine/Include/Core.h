@@ -1,4 +1,5 @@
 #pragma once
+#include "MathLibrary.h"
 
 namespace Core {
 
