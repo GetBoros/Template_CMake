@@ -19,3 +19,6 @@ add_subdirectory(Editor)  # Execute CMakeLists.txt
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Editor)  # Set as startup project to
 
+message("//---------------------------------------------------------------------------------------------------")
+message("--- Compiler id = ${CMAKE_CXX_COMPILER_ID} ---")
+message("//---------------------------------------------------------------------------------------------------")

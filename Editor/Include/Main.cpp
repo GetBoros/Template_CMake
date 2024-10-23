@@ -20,7 +20,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
+    // TODO: Place code here. || In PowerShell enter cmake .. re-init cmake .txt
     Core::PrintHelloWorld();
     Core::Temp();
     AFibonacci fibonacci;
