@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # Base
 project(Project_Name VERSION 1.0.0 LANGUAGES CXX)
 
+#Common Options
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -14,11 +18,20 @@ if (MSVC)
     add_compile_options(/MP)
 endif()
 
+if(WIN32)
+    message("//---------------------------------------------------------------------------------------------------")
+    message("// Operation system : Windows")
+
+elseif(LINUX)
+    message("//---------------------------------------------------------------------------------------------------")
+    message("// Operation system : Linux")
+endif()
+
 add_subdirectory(Engine)  # Execute CMakeLists.txt
 add_subdirectory(Editor)  # Execute CMakeLists.txt
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Editor)  # Set as startup project to
 
 message("//---------------------------------------------------------------------------------------------------")
-message("--- Compiler id = ${CMAKE_CXX_COMPILER_ID} ---")
+message("// Compiler id = ${CMAKE_CXX_COMPILER_ID} ---")
 message("//---------------------------------------------------------------------------------------------------")

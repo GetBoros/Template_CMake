@@ -20,3 +20,7 @@ if (WIN32)
 endif()
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Editor)  # Set as startup project to
+
+set(PICTURES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Pictures")  # Now see this folder Pictures
+set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/editor/Pictures")
+message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")  # cmake .. -G "Visual Studio 17 2022"
