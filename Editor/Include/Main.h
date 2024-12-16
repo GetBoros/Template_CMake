@@ -38,27 +38,6 @@ private:
 	int y_;
 };
 //------------------------------------------------------------------------------------------------------------
-class ACurl
-{
-public:
-	~ACurl();
-	ACurl();
-
-private:
-
-};
-//------------------------------------------------------------------------------------------------------------
-class ATest
-{
-public:
-	void Draw_Image(HDC hdc, bool is_play);
-	void Add_Second_Window(HWND hWnd);
-	void Draw_Text_Custom(HDC hdc, const wchar_t *text, COLORREF text_color, COLORREF text_bk);
-
-private:
-	HWND Handle_Second_Window = 0;
-};
-//------------------------------------------------------------------------------------------------------------
 class AsClicker
 {
 public:
@@ -78,44 +57,27 @@ private:
 	static constexpr SCoordinate cord_send_cd{ 1181, 705 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
 };
 //------------------------------------------------------------------------------------------------------------
-class AWindow
-{// Featured HUD
-
-public:
-	~AWindow();
-	AWindow();
-
-	int Create(HINSTANCE handle_instance, int cmd_show, bool is_timer) const;
-
-private:
-	wchar_t Title_Name_Extended[8];
-	wchar_t Window_Name_Extended[8];
-
-	static LRESULT CALLBACK Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-	static HWND Hwnd_Window_Second;
-};
-//------------------------------------------------------------------------------------------------------------
-class AHUD
+class AsMain_Window
 {
 public:
-	~AHUD();
-	AHUD(HINSTANCE handle_instance, int cmd_show, bool is_timer);
+	~AsMain_Window();
+	AsMain_Window();
 
-	int Init();
+	int APIENTRY Main(HINSTANCE handle_instance, int cmd_show);
 
 private:
-	void Draw_Image();
+	void On_Paint(HWND hwnd);
 
-	void Update();
 	void Window_Create() const;  // Or Add || Better create class widget
 	int Tick();
 
 	int Cmd_Show;
-	int Timer;
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
 
+	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	static AsMain_Window *Self;
 };
 //------------------------------------------------------------------------------------------------------------
 

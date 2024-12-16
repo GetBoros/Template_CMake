@@ -57,7 +57,6 @@ class AsConfig
 public:
 
 	static void Throw();
-	static LRESULT CALLBACK Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	static EHUD_State HUD_State;
 	static bool Is_Playing;
