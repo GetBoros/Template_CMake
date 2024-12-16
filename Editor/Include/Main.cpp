@@ -29,7 +29,7 @@ AsClicker::AsClicker()
    std::this_thread::sleep_for(std::chrono::seconds(Timer_Prep) );  // Time to prepere windows
 }
 //------------------------------------------------------------------------------------------------------------
-int AsClicker::Is_Running(int timer)
+int AsClicker::Is_Running(int &timer)
 {
    auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
@@ -75,7 +75,7 @@ AsMain_Window::~AsMain_Window()
 }
 //------------------------------------------------------------------------------------------------------------
 AsMain_Window::AsMain_Window()
- : Cmd_Show(0), Handle_Instance(0), GDI_Plus_Token(0ULL)
+ : Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL)
 {
    Self = this;
    Gdiplus::GdiplusStartupInput gdiplusStartupInput;   // Init GDI+
@@ -107,40 +107,54 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_Paint(HWND hwnd)
 {
+   const bool is_resize_image = false;
+   wchar_t wchar_value = L'0' + Tick_Seconds;
    PAINTSTRUCT ps{};
    HDC hdc = BeginPaint(AsConfig::Hwnd, &ps);
    Gdiplus::Image *gdi_image;
-
+   Gdiplus::Graphics graphics(hdc);
+   
    if (AsConfig::Is_Playing)
       gdi_image = new Gdiplus::Image(L"Pictures/Record_Button.png");
    else
       gdi_image = new Gdiplus::Image(L"Pictures/Record_Button_Stop.png");
 
+
    if (gdi_image->GetLastStatus() == Gdiplus::Ok)
+      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
+   
+   if (!AsConfig::Is_Playing != false)
    {
-      if (false)
-      {
-         Gdiplus::Bitmap resized_bitmap(AsConfig::Window_Width, AsConfig::Window_Height, PixelFormat32bppARGB);
-         Gdiplus::Graphics resized_graphics(&resized_bitmap);
+      AsClicker().Is_Running(Tick_Seconds);
+      AsConfig::Is_Playing = !AsConfig::Is_Playing;
 
-         resized_graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);  // interpolation quality
-         resized_graphics.DrawImage(gdi_image, 0, 0, AsConfig::Window_Width, AsConfig::Window_Height);  // draw resized image
+      delete gdi_image;
+      gdi_image = new Gdiplus::Image(L"Pictures/Record_Button.png");
 
-         Gdiplus::Graphics graphics(hdc);
-         graphics.DrawImage(&resized_bitmap, 0, 0);  // show resized image in window
-      }
-      else
-      {
-         Gdiplus::Graphics graphics(hdc);
-         graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
-      }
+      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
    }
 
-   if (!AsConfig::Is_Playing != false)
-      AsClicker().Is_Running(1);
-
+   TextOutW(hdc, -2, 42, &wchar_value, (int)wcslen(L"2") );
    delete gdi_image;
    EndPaint(AsConfig::Hwnd, &ps);
+}
+//------------------------------------------------------------------------------------------------------------
+void AsMain_Window::On_LMB_Down(HWND hwnd)
+{
+   std::this_thread::sleep_for(std::chrono::milliseconds(150) );  // Time to prepare windows
+   AsConfig::Is_Playing = !AsConfig::Is_Playing;
+
+   InvalidateRect(hwnd, 0, AsConfig::Is_Background);  // Need redraw image, just call WM_PAINT set image name
+
+   if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+      AsConfig::Is_Playing = true;
+
+   while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+   {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Not every milliseconds get and move
+      GetCursorPos(&AsConfig::Cursor_Pos);
+      MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, AsConfig::Window_Main_Rect.right, AsConfig::Window_Main_Rect.bottom, false);
+   }
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create() const
@@ -195,24 +209,13 @@ LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, 
       break;
 
    case WM_LBUTTONDOWN:
-   {// !!! Refactoring make class or func if nothing changed
+      Self->On_LMB_Down(hWnd);
+      break;
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(150) );  // Time to prepare windows
-      AsConfig::Is_Playing = !AsConfig::Is_Playing;
-
-      InvalidateRect(hWnd, 0, AsConfig::Is_Background);  // Need redraw image, just call WM_PAINT set image name
-
-      if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
-         AsConfig::Is_Playing = true;
-
-      while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
-      {
-         std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Not every milliseconds get and move
-         GetCursorPos(&AsConfig::Cursor_Pos);
-         MoveWindow(hWnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, AsConfig::Window_Main_Rect.right, AsConfig::Window_Main_Rect.bottom, false);
-      }
-   }
-   break;
+   case WM_MOUSEWHEEL:
+      Self->Tick_Seconds = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? ++Self->Tick_Seconds : --Self->Tick_Seconds;
+      InvalidateRect(hWnd, 0, AsConfig::Is_Background);
+      break;
 
    case WM_DESTROY:
       PostQuitMessage(0);

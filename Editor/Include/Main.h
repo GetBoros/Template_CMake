@@ -44,7 +44,7 @@ public:
 	~AsClicker();
 	AsClicker();
 
-	int Is_Running(int timer);
+	int Is_Running(int &timer);
 
 private:
 
@@ -67,11 +67,13 @@ public:
 
 private:
 	void On_Paint(HWND hwnd);
+	void On_LMB_Down(HWND hwnd);
 
 	void Window_Create() const;  // Or Add || Better create class widget
 	int Tick();
 
 	int Cmd_Show;
+	int Tick_Seconds;
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
 
