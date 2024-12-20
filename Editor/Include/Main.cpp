@@ -11,6 +11,11 @@ static consteval bool Is_App()
       return false;
 }
 //------------------------------------------------------------------------------------------------------------
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+   ((std::string*)userp)->append((char*)contents, size * nmemb);
+   return size * nmemb;
+}
+//------------------------------------------------------------------------------------------------------------
 
 
 
@@ -31,6 +36,9 @@ AsClicker::AsClicker()
 //------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(int &timer)
 {
+   //const SCoordinate &test = Test_Cords;
+   const SCoordinate &test = cord_send_cd;
+   
    auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
       SetCursorPos(cords.x, cords.y);  // After each set cursor need return to prev position
@@ -41,11 +49,17 @@ int AsClicker::Is_Running(int &timer)
    while (true)
    {// !!! Refactoring
 
-      perform_action(cord_send_cd, Inputs_Keyboard, 2, 200);  // F5
-      perform_action(cord_send_cd, Inputs_Mouses, 2, (timer) * 1000);  // Pressed at cord
+      //perform_action(test, Inputs_Keyboard, 2, 200);  // F5
+      perform_action(test, Inputs_Mouses, 2, (timer) * /*150*/1000);  // Pressed at cord
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
+      if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000) && (GetAsyncKeyState('R') & 0x8000) )
+      {
+         PostQuitMessage(0); // Завершаем приложение
+         return 0;
+      }
+
    }
 }
 //------------------------------------------------------------------------------------------------------------
@@ -105,42 +119,35 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
    return Tick();
 }
 //------------------------------------------------------------------------------------------------------------
+void AsMain_Window::Window_Create() const
+{
+   const RECT &rect = AsConfig::Window_Main_Rect;
+
+   AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
+      L"Hello", L"Hello", WS_POPUP, rect.left, rect.top, rect.right, rect.bottom, 0, 0, Handle_Instance, 0);   // Create Window
+
+   if (!AsConfig::Hwnd != 0)
+      return;
+
+   ShowWindow(AsConfig::Hwnd, Cmd_Show);   // Or make add to view port func
+   UpdateWindow(AsConfig::Hwnd);  // Call WM_Paint
+}
+//------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_Paint(HWND hwnd)
 {
-   const bool is_resize_image = false;
-   wchar_t wchar_value = L'0' + Tick_Seconds;
-   PAINTSTRUCT ps{};
+   PAINTSTRUCT ps {};
    HDC hdc = BeginPaint(AsConfig::Hwnd, &ps);
-   Gdiplus::Image *gdi_image;
-   Gdiplus::Graphics graphics(hdc);
-   
-   if (AsConfig::Is_Playing)
-      gdi_image = new Gdiplus::Image(L"Pictures/Record_Button.png");
-   else
-      gdi_image = new Gdiplus::Image(L"Pictures/Record_Button_Stop.png");
 
+   Draw_Image(hdc, L"Pictures/Main_Image.png");
 
-   if (gdi_image->GetLastStatus() == Gdiplus::Ok)
-      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
-   
-   if (!AsConfig::Is_Playing != false)
-   {
-      AsClicker().Is_Running(Tick_Seconds);
-      AsConfig::Is_Playing = !AsConfig::Is_Playing;
-
-      delete gdi_image;
-      gdi_image = new Gdiplus::Image(L"Pictures/Record_Button.png");
-
-      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
-   }
-
-   TextOutW(hdc, -2, 42, &wchar_value, (int)wcslen(L"2") );
-   delete gdi_image;
    EndPaint(AsConfig::Hwnd, &ps);
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
 {
+   int timer = 1;
+   AsClicker().Is_Running(timer);
+
    std::this_thread::sleep_for(std::chrono::milliseconds(150) );  // Time to prepare windows
    AsConfig::Is_Playing = !AsConfig::Is_Playing;
 
@@ -157,20 +164,16 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
    }
 }
 //------------------------------------------------------------------------------------------------------------
-void AsMain_Window::Window_Create() const
+void AsMain_Window::Draw_Image(HDC hdc, const wchar_t *image_path) const
 {
-   const RECT &rect = AsConfig::Window_Main_Rect;
+   Gdiplus::Image *gdi_image;
+   Gdiplus::Graphics graphics(hdc);
+   
+   gdi_image = new Gdiplus::Image(image_path);
+   if (gdi_image->GetLastStatus() == Gdiplus::Ok)
+      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
 
-   // Create Window
-   AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
-      L"Hello", L"Hello", WS_POPUP, rect.left, rect.top, rect.right, rect.bottom, 0, 0, Handle_Instance, 0);
-
-   if (!AsConfig::Hwnd != 0)
-      return;
-
-   // Or make add to view port func
-   ShowWindow(AsConfig::Hwnd, Cmd_Show);
-   UpdateWindow(AsConfig::Hwnd);  // Call WM_Paint
+   delete gdi_image;
 }
 //------------------------------------------------------------------------------------------------------------
 int AsMain_Window::Tick()
@@ -210,6 +213,9 @@ LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, 
 
    case WM_LBUTTONDOWN:
       Self->On_LMB_Down(hWnd);
+      break;
+
+   case WM_KEYDOWN:
       break;
 
    case WM_MOUSEWHEEL:

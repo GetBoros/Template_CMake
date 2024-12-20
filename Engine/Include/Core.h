@@ -6,7 +6,6 @@
 #include <string>
 #include <fstream>  // Read write from files
 #include <gdiplus.h>  // Work with image
-#include <curl/curl.h>  // !!! Parsing Site
 #include <thread>  // Use Threads
 
 #define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
@@ -61,7 +60,6 @@ public:
 	static EHUD_State HUD_State;
 	static bool Is_Playing;
 
-
 	static constexpr BYTE Alpha_Visibility = 255;  // 255 - 100% / 2 - 50% / 4 - 25%
 	static constexpr bool Is_Background = true;  // if true draw background
 
@@ -71,12 +69,10 @@ public:
 	static constexpr int Max_Char_Length = 100;
 	static constexpr int Window_Height = 200;  // used to resize custom image
 	static constexpr int Window_Width = 150;  // -||-
-	static constexpr int Scale = 9;
-	static constexpr int Image_Size = 52;
 
 	//static constexpr COLORREF transparentColor = RGB(background_transparency, background_transparency, background_transparency);
 	static constexpr COLORREF transparentColor{ (Window_Background_Transparency, Window_Background_Transparency, Window_Background_Transparency) };  // !!! TEMP
-	static constexpr RECT Window_Main_Rect{ Image_Size, Image_Size, Image_Size + Scale, Image_Size + Scale };
+	static constexpr RECT Window_Main_Rect{ 50, 50, 136 + 6, 20 + 6 };  // !!!
 
 	static HWND Hwnd;
 	static HDC Hdc;

@@ -54,7 +54,8 @@ private:
 	int Timer_Prep;
 
 	// TEMP
-	static constexpr SCoordinate cord_send_cd{ 1181, 705 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
+	static constexpr SCoordinate Test_Cords { 1357, 725 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
+	static constexpr SCoordinate cord_send_cd { 1181, 705 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
 };
 //------------------------------------------------------------------------------------------------------------
 class AsMain_Window
@@ -66,10 +67,12 @@ public:
 	int APIENTRY Main(HINSTANCE handle_instance, int cmd_show);
 
 private:
+	void Window_Create() const;  // Or Add || Better create class widget
 	void On_Paint(HWND hwnd);
 	void On_LMB_Down(HWND hwnd);
 
-	void Window_Create() const;  // Or Add || Better create class widget
+	void Draw_Image(HDC hdc, const wchar_t *image_path) const;
+
 	int Tick();
 
 	int Cmd_Show;
