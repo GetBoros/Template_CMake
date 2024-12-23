@@ -31,6 +31,37 @@ private:
 	int y_;
 };
 //------------------------------------------------------------------------------------------------------------
+class AButton
+{
+public:
+	~AButton();
+	AButton();
+
+	void Set_Size(int width, int height);
+
+	int Width;
+	int Height;
+};
+//------------------------------------------------------------------------------------------------------------
+class AWindow
+{
+public:
+	~AWindow();
+	AWindow();
+
+	void Set_Location(int x, int y);
+	void Set_Size(int width, int height);
+	void Add_Button(const AButton *button);
+
+	int X;
+	int Y;
+	int Width;
+	int Height;
+
+private:
+	int Window_Offset;
+};
+//------------------------------------------------------------------------------------------------------------
 class AsClicker
 {
 public:

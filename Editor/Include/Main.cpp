@@ -11,9 +11,63 @@ static consteval bool Is_App()
       return false;
 }
 //------------------------------------------------------------------------------------------------------------
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-   ((std::string*)userp)->append((char*)contents, size * nmemb);
-   return size * nmemb;
+
+
+
+
+// AButton
+AButton::~AButton()
+{
+}
+//------------------------------------------------------------------------------------------------------------
+AButton::AButton()
+ : Width(0), Height(0)
+{
+}
+//------------------------------------------------------------------------------------------------------------
+void AButton::Set_Size(int width, int height)
+{
+	Width = width;
+	Height = height;
+}
+//------------------------------------------------------------------------------------------------------------
+
+
+
+
+// AWindow
+AWindow::~AWindow()
+{
+}
+//------------------------------------------------------------------------------------------------------------
+AWindow::AWindow()
+ : X(0), Y(0), Width(0), Height(0), Window_Offset(6)
+{
+   Width = Window_Offset + 1;
+   Height = Window_Offset + 1;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Set_Location(int x, int y)
+{
+	X = x;
+	Y = y;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Set_Size(int width, int height)
+{
+	Width = width;
+	Height = height;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Add_Button(const AButton *button)
+{
+   // Window can have array of buttons, and here we store them
+
+   // Resize window after add buttons
+	
+   Width += button->Width;
+   if (Height < button->Height)
+      Height = button->Height + Window_Offset + 1;
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -118,24 +172,28 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create() const
 {
-   POINT start_point { 50, 50 };
+	AButton button;
+   AWindow window;
    int offset = 3;
    int button_count = 3;
-	int button_width = 27;
-	int button_height = 20;
-	int window_width = button_width * button_count + offset * 2 + 1;
-	int window_height = button_height + offset * 2;
+
+	button.Set_Size(27, 20);
+   window.Add_Button(&button);
+   window.Add_Button(&button);
+   window.Add_Button(&button);
+	//window.Set_Size(button.Width * button_count + offset * 2 + 1, button.Height + offset * 2);  // Button counts
+	window.Set_Location(50, 50);
 
    // !!! TEMP
-   AsConfig::Window_Main_Rect = { start_point.x, start_point.y, start_point.x + window_width, start_point.y + window_height };
-	AsConfig::Window_Main_Buttons = new RECT[button_count] {};
-	AsConfig::Window_Main_Buttons[0] = { start_point.x + offset, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
-	AsConfig::Window_Main_Buttons[1] = { start_point.x + offset + button_width, start_point.y + offset, start_point.x + button_width * 2 + offset, start_point.y + button_height + offset };
-	AsConfig::Window_Main_Buttons[2] = { start_point.x + offset + button_width * 2, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
+ //  AsConfig::Window_Main_Rect = { start_point.x, start_point.y, start_point.x + window_width, start_point.y + window_height };
+	//AsConfig::Window_Main_Buttons = new RECT[button_count] {};
+	//AsConfig::Window_Main_Buttons[0] = { start_point.x + offset, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
+	//AsConfig::Window_Main_Buttons[1] = { start_point.x + offset + button_width, start_point.y + offset, start_point.x + button_width * 2 + offset, start_point.y + button_height + offset };
+	//AsConfig::Window_Main_Buttons[2] = { start_point.x + offset + button_width * 2, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
    // !!! TEMP END
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
-      L"H", L"H", WS_POPUP, start_point.x, start_point.y, window_width, window_height, 0, 0, Handle_Instance, 0);
+      L"H", L"H", WS_POPUP, window.X, window.Y, window.Width, window.Height, 0, 0, Handle_Instance, 0);
 
    if (!AsConfig::Hwnd != 0)
       return;
