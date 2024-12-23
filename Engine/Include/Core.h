@@ -58,10 +58,9 @@ public:
 	static void Throw();
 
 	static EHUD_State HUD_State;
-	static bool Is_Playing;
 
 	static constexpr BYTE Alpha_Visibility = 255;  // 255 - 100% / 2 - 50% / 4 - 25%
-	static constexpr bool Is_Background = true;  // if true draw background
+	static constexpr bool Is_Draw_At_BG = true;  // if true draw background || if false clear background
 
 	static constexpr int Window_Background_Transparency = 255;  // If 255 - 100%
 	static constexpr int ID_Timer = 1;  // Timer Name, can be a lot

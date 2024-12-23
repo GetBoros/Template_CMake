@@ -21,7 +21,7 @@ AButton::~AButton()
 }
 //------------------------------------------------------------------------------------------------------------
 AButton::AButton()
- : Width(0), Height(0)
+ : Width(0), Height(0), Button_Rect {}
 {
 }
 //------------------------------------------------------------------------------------------------------------
@@ -41,10 +41,35 @@ AWindow::~AWindow()
 }
 //------------------------------------------------------------------------------------------------------------
 AWindow::AWindow()
- : X(0), Y(0), Width(0), Height(0), Window_Offset(6)
+ : X(0), Y(0), Width(0), Height(0), Button(0), Window_Temp(EWindow_Temp::None), Window_Offset(6)
 {
    Width = Window_Offset + 1;
    Height = Window_Offset + 1;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Handle()
+{
+   const int timer = 1;  // !!! Move elsewhere every 1 second
+
+   switch (Window_Temp)
+   {
+   case EWindow_Temp::None:
+      break;
+   case EWindow_Temp::Clicker:
+      AsClicker().Is_Running(timer, Anime_Stars_Cord);
+      break;
+   case EWindow_Temp::Exit:
+      PostQuitMessage(0);
+      break;
+   default:
+      break;
+   }
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Button_Click_Handle()
+{
+   if (PtInRect(&Button->Button_Rect, AsConfig::Cursor_Pos) )  // First button
+      Window_Temp = EWindow_Temp::Clicker;
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Set_Location(int x, int y)
@@ -59,12 +84,17 @@ void AWindow::Set_Size(int width, int height)
 	Height = height;
 }
 //------------------------------------------------------------------------------------------------------------
-void AWindow::Add_Button(const AButton *button)
+void AWindow::Add_Button(AButton *button)
 {
-   // Window can have array of buttons, and here we store them
+   Button = button;  // !!! Temp add to array all added buttons
+	
+   // Give button his x, y cords
+   button->Button_Rect.left = X + Window_Offset / 2;
+   button->Button_Rect.top = Y + Window_Offset / 2;
+   button->Button_Rect.right = button->Button_Rect.left + button->Width;
+   button->Button_Rect.bottom = button->Button_Rect.top + button->Height;
 
    // Resize window after add buttons
-	
    Width += button->Width;
    if (Height < button->Height)
       Height = button->Height + Window_Offset + 1;
@@ -88,7 +118,7 @@ AsClicker::AsClicker()
    std::this_thread::sleep_for(std::chrono::seconds(Timer_Prep) );  // Time to prepere windows
 }
 //------------------------------------------------------------------------------------------------------------
-int AsClicker::Is_Running(int &timer, const SCoordinate &test)
+int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
 {
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
@@ -170,30 +200,16 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
    return Tick();
 }
 //------------------------------------------------------------------------------------------------------------
-void AsMain_Window::Window_Create() const
+void AsMain_Window::Window_Create()
 {
-	AButton button;
-   AWindow window;
-   int offset = 3;
-   int button_count = 3;
-
-	button.Set_Size(27, 20);
-   window.Add_Button(&button);
-   window.Add_Button(&button);
-   window.Add_Button(&button);
-	//window.Set_Size(button.Width * button_count + offset * 2 + 1, button.Height + offset * 2);  // Button counts
-	window.Set_Location(50, 50);
-
-   // !!! TEMP
- //  AsConfig::Window_Main_Rect = { start_point.x, start_point.y, start_point.x + window_width, start_point.y + window_height };
-	//AsConfig::Window_Main_Buttons = new RECT[button_count] {};
-	//AsConfig::Window_Main_Buttons[0] = { start_point.x + offset, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
-	//AsConfig::Window_Main_Buttons[1] = { start_point.x + offset + button_width, start_point.y + offset, start_point.x + button_width * 2 + offset, start_point.y + button_height + offset };
-	//AsConfig::Window_Main_Buttons[2] = { start_point.x + offset + button_width * 2, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
-   // !!! TEMP END
+	Button = new AButton();
+   Window = new AWindow();
+   Button->Set_Size(27, 20);  // Must be before to add to window
+   Window->Set_Location(50, 50);  // Must be before add buttons
+   Window->Add_Button(Button);
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
-      L"H", L"H", WS_POPUP, window.X, window.Y, window.Width, window.Height, 0, 0, Handle_Instance, 0);
+      L"H", L"H", WS_POPUP, Window->X, Window->Y, Window->Width, Window->Height, 0, 0, Handle_Instance, 0);
 
    if (!AsConfig::Hwnd != 0)
       return;
@@ -214,35 +230,27 @@ void AsMain_Window::On_Paint(HWND hwnd)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
 {
-	int timer = 1;  // every 1 second
-   GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
+   const int delay_ms = 150;
+
+   // 1.0. Call WM_PAINT and delay
+   InvalidateRect(hwnd, 0, AsConfig::Is_Draw_At_BG);  // Need redraw image, just call WM_PAINT set image name
+   std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms) );  // Delay 15 ms || If not hold | clicked once, then redraw image or draw new image
    
-	if (PtInRect(&AsConfig::Window_Main_Buttons[0], AsConfig::Cursor_Pos) )  // First button
-      AsClicker().Is_Running(timer, Anime_Stars_Cord);
-      return;
+   // 1.1. Click Handle
+   if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )
+	{// If not hold LMB then check where clicked
 
-	if (PtInRect(&AsConfig::Window_Main_Buttons[1], AsConfig::Cursor_Pos) )  // Second Button || Create Editable, save to array cords
-      return;
-
-	if (PtInRect(&AsConfig::Window_Main_Buttons[2], AsConfig::Cursor_Pos) )  // Exit button
-   {
-      PostQuitMessage(0);
-      return;
+      GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
+      Window->Button_Click_Handle();  // Check where button was clicked
+      Window->Handle();  // Handle all actions responsed on button clicked
    }
-
-
-   std::this_thread::sleep_for(std::chrono::milliseconds(150) );  // Time to prepare windows
-   AsConfig::Is_Playing = !AsConfig::Is_Playing;
-   InvalidateRect(hwnd, 0, AsConfig::Is_Background);  // Need redraw image, just call WM_PAINT set image name
-
-   if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
-      AsConfig::Is_Playing = true;
-
+   
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
-   {
+   {// If hold LMB then move window
+
       std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Not every milliseconds get and move
       GetCursorPos(&AsConfig::Cursor_Pos);
-      MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, AsConfig::Window_Main_Rect.right, AsConfig::Window_Main_Rect.bottom, false);
+      MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window->Width, Window->Height, false);
    }
 }
 //------------------------------------------------------------------------------------------------------------
@@ -296,7 +304,7 @@ LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, 
 
    case WM_TIMER:
       SetWindowPos(hWnd, HWND_TOPMOST, 200, 200, 0, 0, SWP_NOSIZE);
-      InvalidateRect(hWnd, 0, AsConfig::Is_Background);  // Call WM_PAINT, draw all with background color
+      InvalidateRect(hWnd, 0, AsConfig::Is_Draw_At_BG);  // Call WM_PAINT, draw all with background color
       break;
 
    case WM_PAINT:
@@ -311,8 +319,8 @@ LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, 
       break;
 
    case WM_MOUSEWHEEL:
-      Self->Tick_Seconds = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? ++Self->Tick_Seconds : --Self->Tick_Seconds;
-      InvalidateRect(hWnd, 0, AsConfig::Is_Background);
+      Self->Tick_Seconds = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? ++Self->Tick_Seconds : --Self->Tick_Seconds;  // !!! Bad example
+      InvalidateRect(hWnd, 0, AsConfig::Is_Draw_At_BG);
       break;
 
    case WM_DESTROY:

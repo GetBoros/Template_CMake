@@ -3,7 +3,15 @@
 #include "framework.h"
 #include "Core.h"
 
-// SMouse_Cords
+
+//------------------------------------------------------------------------------------------------------------
+enum class EWindow_Temp : byte
+{
+	None,
+	Clicker,
+	Exit
+};
+//------------------------------------------------------------------------------------------------------------
 struct SMouse_Cords
 {
 	int x;
@@ -41,6 +49,7 @@ public:
 
 	int Width;
 	int Height;
+	RECT Button_Rect;
 };
 //------------------------------------------------------------------------------------------------------------
 class AWindow
@@ -49,17 +58,22 @@ public:
 	~AWindow();
 	AWindow();
 
+	void Handle();
+	void Button_Click_Handle();
 	void Set_Location(int x, int y);
 	void Set_Size(int width, int height);
-	void Add_Button(const AButton *button);
+	void Add_Button(AButton *button);
 
 	int X;
 	int Y;
 	int Width;
 	int Height;
+	AButton *Button;
 
 private:
+	EWindow_Temp Window_Temp;
 	int Window_Offset;
+	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
 };
 //------------------------------------------------------------------------------------------------------------
 class AsClicker
@@ -68,7 +82,7 @@ public:
 	~AsClicker();
 	AsClicker();
 
-	int Is_Running(int &timer, const SCoordinate &test);
+	int Is_Running(const int &timer, const SCoordinate &test);
 
 private:
 
@@ -89,7 +103,7 @@ public:
 	int APIENTRY Main(HINSTANCE handle_instance, int cmd_show);
 
 private:
-	void Window_Create() const;  // Or Add || Better create class widget
+	void Window_Create();  // Or Add || Better create class widget
 	void On_Paint(HWND hwnd);
 	void On_LMB_Down(HWND hwnd);
 
@@ -101,10 +115,12 @@ private:
 	int Tick_Seconds;
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
+	AWindow *Window = 0;
+	AButton *Button = 0;
+
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	static constexpr SCoordinate Anime_Stars_Cord { 1181, 705 };
 	static constexpr SCoordinate Youtube_Emo_Cord { 1357, 725 };
 	static constexpr SCoordinate Twitch_Rewd_Cord { 1357, 725 };
 	static AsMain_Window *Self;
