@@ -3,12 +3,12 @@
 #include "framework.h"
 #include "Core.h"
 
-
 //------------------------------------------------------------------------------------------------------------
-enum class EWindow_Temp : byte
+enum class EButton_Action : byte
 {
 	None,
 	Clicker,
+	Clicker_Settings,
 	Exit
 };
 //------------------------------------------------------------------------------------------------------------
@@ -43,13 +43,15 @@ class AButton
 {
 public:
 	~AButton();
-	AButton();
+	AButton(int x, int y, EButton_Action button_action);
 
-	void Set_Size(int width, int height);
+	void Activate() const;
 
+	EButton_Action Button_Action;
 	int Width;
 	int Height;
 	RECT Button_Rect;
+	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
 };
 //------------------------------------------------------------------------------------------------------------
 class AWindow
@@ -58,7 +60,6 @@ public:
 	~AWindow();
 	AWindow();
 
-	void Handle();
 	void Button_Click_Handle();
 	void Set_Location(int x, int y);
 	void Set_Size(int width, int height);
@@ -68,12 +69,10 @@ public:
 	int Y;
 	int Width;
 	int Height;
-	AButton *Button;
+	std::array<AButton *, 5> *Buttons_Array;
 
 private:
-	EWindow_Temp Window_Temp;
 	int Window_Offset;
-	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
 };
 //------------------------------------------------------------------------------------------------------------
 class AsClicker
@@ -85,13 +84,10 @@ public:
 	int Is_Running(const int &timer, const SCoordinate &test);
 
 private:
-
+	int Timer_Prep;
 	POINT Cursor_Prev_Cords;
 	INPUT Inputs_Mouses[2];
 	INPUT Inputs_Keyboard[2];
-	int Timer_Prep;
-
-	// TEMP
 };
 //------------------------------------------------------------------------------------------------------------
 class AsMain_Window

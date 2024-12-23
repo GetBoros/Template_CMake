@@ -20,15 +20,28 @@ AButton::~AButton()
 {
 }
 //------------------------------------------------------------------------------------------------------------
-AButton::AButton()
- : Width(0), Height(0), Button_Rect {}
+AButton::AButton(int x, int y, EButton_Action button_action)
+ : Width(x), Height(y), Button_Action(button_action), Button_Rect {}
 {
 }
 //------------------------------------------------------------------------------------------------------------
-void AButton::Set_Size(int width, int height)
+void AButton::Activate() const
 {
-	Width = width;
-	Height = height;
+   const int timer = 1;  // !!! Move elsewhere every 1 second
+
+   switch (Button_Action)
+   {
+   case EButton_Action::None:
+      break;
+   case EButton_Action::Clicker:
+      AsClicker().Is_Running(timer, Anime_Stars_Cord);
+      break;
+   case EButton_Action::Exit:
+      PostQuitMessage(0);
+      break;
+   default:
+      break;
+   }
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -38,38 +51,33 @@ void AButton::Set_Size(int width, int height)
 // AWindow
 AWindow::~AWindow()
 {
+   for (auto &button: *Buttons_Array)
+		delete button;
+	delete Buttons_Array;
 }
 //------------------------------------------------------------------------------------------------------------
 AWindow::AWindow()
- : X(0), Y(0), Width(0), Height(0), Button(0), Window_Temp(EWindow_Temp::None), Window_Offset(6)
+ : X(0), Y(0), Width(0), Height(0), Window_Offset(6), Buttons_Array(0)
 {
    Width = Window_Offset + 1;
    Height = Window_Offset + 1;
-}
-//------------------------------------------------------------------------------------------------------------
-void AWindow::Handle()
-{
-   const int timer = 1;  // !!! Move elsewhere every 1 second
-
-   switch (Window_Temp)
-   {
-   case EWindow_Temp::None:
-      break;
-   case EWindow_Temp::Clicker:
-      AsClicker().Is_Running(timer, Anime_Stars_Cord);
-      break;
-   case EWindow_Temp::Exit:
-      PostQuitMessage(0);
-      break;
-   default:
-      break;
-   }
+   Buttons_Array = new std::array<AButton *, 5>();
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Button_Click_Handle()
 {
-   if (PtInRect(&Button->Button_Rect, AsConfig::Cursor_Pos) )  // First button
-      Window_Temp = EWindow_Temp::Clicker;
+   int i = 0;
+   AButton *button = 0;
+
+   for (i; i < Buttons_Array->size(); i++)
+   {
+      button = Buttons_Array->at(i);
+      if (PtInRect(&button->Button_Rect, AsConfig::Cursor_Pos) )  // First button
+      {
+         button->Activate();
+         break;
+      }
+   }
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Set_Location(int x, int y)
@@ -86,15 +94,26 @@ void AWindow::Set_Size(int width, int height)
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Add_Button(AButton *button)
 {
-   Button = button;  // !!! Temp add to array all added buttons
-	
-   // Give button his x, y cords
-   button->Button_Rect.left = X + Window_Offset / 2;
+   int i = 0;
+
+   // 1.0. Add to array
+   for (i = 0; i < Buttons_Array->size(); i++)
+   {// !!! Can be better!
+
+      if (Buttons_Array->at(i) == 0)
+      {
+         Buttons_Array->at(i) = button;
+         break;
+      }
+   }
+
+   // 1.1. Set button rect cords
+   button->Button_Rect.left = X + Window_Offset / 2 + button->Width * i;
    button->Button_Rect.top = Y + Window_Offset / 2;
-   button->Button_Rect.right = button->Button_Rect.left + button->Width;
+   button->Button_Rect.right = button->Button_Rect.left + button->Width * i;
    button->Button_Rect.bottom = button->Button_Rect.top + button->Height;
 
-   // Resize window after add buttons
+   // 1.2. Resize window after add buttons
    Width += button->Width;
    if (Height < button->Height)
       Height = button->Height + Window_Offset + 1;
@@ -202,11 +221,11 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create()
 {
-	Button = new AButton();
    Window = new AWindow();
-   Button->Set_Size(27, 20);  // Must be before to add to window
+
    Window->Set_Location(50, 50);  // Must be before add buttons
-   Window->Add_Button(Button);
+   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker) );  // Or create button in window?
+   Window->Add_Button(new AButton(27, 20, EButton_Action::Exit) );  // Or create button in window?
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
       L"H", L"H", WS_POPUP, Window->X, Window->Y, Window->Width, Window->Height, 0, 0, Handle_Instance, 0);
@@ -235,16 +254,12 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
    // 1.0. Call WM_PAINT and delay
    InvalidateRect(hwnd, 0, AsConfig::Is_Draw_At_BG);  // Need redraw image, just call WM_PAINT set image name
    std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms) );  // Delay 15 ms || If not hold | clicked once, then redraw image or draw new image
-   
-   // 1.1. Click Handle
-   if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )
-	{// If not hold LMB then check where clicked
+   GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
 
-      GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
+   // 1.1. Click Handle
+   if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )  // If not hold LMB then check where clicked
       Window->Button_Click_Handle();  // Check where button was clicked
-      Window->Handle();  // Handle all actions responsed on button clicked
-   }
-   
+
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
    {// If hold LMB then move window
 

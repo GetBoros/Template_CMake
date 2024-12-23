@@ -7,6 +7,8 @@
 #include <fstream>  // Read write from files
 #include <gdiplus.h>  // Work with image
 #include <thread>  // Use Threads
+#include <array>
+
 
 #define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
 
