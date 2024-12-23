@@ -66,6 +66,13 @@ bool AsConfig::Is_Playing = true;
 HWND AsConfig::Hwnd = 0;
 HDC AsConfig::Hdc = 0;
 POINT AsConfig::Cursor_Pos = {};
+RECT AsConfig::Window_Main_Rect = {};
+RECT *AsConfig::Window_Main_Buttons = 0;
+//------------------------------------------------------------------------------------------------------------
+AsConfig::~AsConfig()
+{
+	delete[] AsConfig::Window_Main_Buttons;
+}
 //------------------------------------------------------------------------------------------------------------
 void AsConfig::Throw()
 {

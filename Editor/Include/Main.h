@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "framework.h"
 #include "Core.h"
@@ -16,13 +16,6 @@ struct SCoordinate
 	consteval SCoordinate(int x, int y) : x(x), y(y) {}
 
 	int x, y;
-	//SMouse_Cords cord_updates{ 1022, 66 };
-	//SMouse_Cords cord_img_url{ 422, 342 };
-	//SMouse_Cords cord_url_bar{ 500, 60 };
-	//consteval SCoordinate cord_send_cd{ 1049, 705 };
-	//SMouse_Cords cord_card_buy{ 1000, 495 };
-	//SMouse_Cords cord_card_select{ 1338, 428 };
-
 };
 //------------------------------------------------------------------------------------------------------------
 class ConstexprClass
@@ -44,7 +37,7 @@ public:
 	~AsClicker();
 	AsClicker();
 
-	int Is_Running(int &timer);
+	int Is_Running(int &timer, const SCoordinate &test);
 
 private:
 
@@ -54,8 +47,6 @@ private:
 	int Timer_Prep;
 
 	// TEMP
-	static constexpr SCoordinate Test_Cords { 1357, 725 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
-	static constexpr SCoordinate cord_send_cd { 1181, 705 };  // Card Sacriface || Those must be at .dll || Rewrite .dll? =)
 };
 //------------------------------------------------------------------------------------------------------------
 class AsMain_Window
@@ -82,6 +73,9 @@ private:
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+	static constexpr SCoordinate Anime_Stars_Cord { 1181, 705 };
+	static constexpr SCoordinate Youtube_Emo_Cord { 1357, 725 };
+	static constexpr SCoordinate Twitch_Rewd_Cord { 1357, 725 };
 	static AsMain_Window *Self;
 };
 //------------------------------------------------------------------------------------------------------------
@@ -93,6 +87,9 @@ private:
 //------------------------------------------------------------------------------------------------------------
 #pragma region TASKS MAIN
 /*
+
+X	- Make Exit button
+
 
 X	- What if save curr user position end return to it?
 		- While thread sleep return to prev custom location
@@ -108,7 +105,6 @@ X	- When red button pressed:
 
 X	- Config
 X		- Transfer to config main settings
-
 
 */
 #pragma endregion
@@ -161,7 +157,7 @@ X			- 523 start from here can save to file
 
 X      - get from read_buffer image url?:  /uploads/cards_image/197/e/jemblema-bagrovyh-lvov-1731289425.webp
 X         - Start: <div class=\"club-boost__image\"><img src=\"
-X         - End: " alt="Êàðòà"></div>
+X         - End: " alt="ÐšÐ°Ñ€Ñ‚Ð°"></div>
 X      - concat with site https://animestars.org/
 X      - Save image to default folder
 X      - show user those image in app?

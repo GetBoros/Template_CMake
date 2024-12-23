@@ -54,7 +54,7 @@ enum class EHUD_State : byte
 class AsConfig
 {
 public:
-
+	~AsConfig();
 	static void Throw();
 
 	static EHUD_State HUD_State;
@@ -72,11 +72,12 @@ public:
 
 	//static constexpr COLORREF transparentColor = RGB(background_transparency, background_transparency, background_transparency);
 	static constexpr COLORREF transparentColor{ (Window_Background_Transparency, Window_Background_Transparency, Window_Background_Transparency) };  // !!! TEMP
-	static constexpr RECT Window_Main_Rect{ 50, 50, 136 + 6, 20 + 6 };  // !!!
-
+	
 	static HWND Hwnd;
 	static HDC Hdc;
 	static POINT Cursor_Pos;
+	static RECT Window_Main_Rect;
+	static RECT *Window_Main_Buttons;
 };
 //------------------------------------------------------------------------------------------------------------
 

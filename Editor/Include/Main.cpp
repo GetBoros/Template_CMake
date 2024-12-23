@@ -34,12 +34,9 @@ AsClicker::AsClicker()
    std::this_thread::sleep_for(std::chrono::seconds(Timer_Prep) );  // Time to prepere windows
 }
 //------------------------------------------------------------------------------------------------------------
-int AsClicker::Is_Running(int &timer)
+int AsClicker::Is_Running(int &timer, const SCoordinate &test)
 {
-   //const SCoordinate &test = Test_Cords;
-   const SCoordinate &test = cord_send_cd;
-   
-   auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
+	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
       SetCursorPos(cords.x, cords.y);  // After each set cursor need return to prev position
       SendInput(static_cast<UINT>(input_count), input_type, sizeof(INPUT) );
@@ -49,14 +46,14 @@ int AsClicker::Is_Running(int &timer)
    while (true)
    {// !!! Refactoring
 
-      //perform_action(test, Inputs_Keyboard, 2, 200);  // F5
+		perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
       perform_action(test, Inputs_Mouses, 2, (timer) * /*150*/1000);  // Pressed at cord
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000) && (GetAsyncKeyState('R') & 0x8000) )
       {
-         PostQuitMessage(0); // Завершаем приложение
+         PostQuitMessage(0);
          return 0;
       }
 
@@ -107,24 +104,38 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
    .style = CS_HREDRAW | CS_VREDRAW,
    .lpfnWndProc = Window_Procedure,
    .hInstance = Handle_Instance,
-   .hIcon = LoadIcon(Handle_Instance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1)),
+   .hIcon = LoadIcon(Handle_Instance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1) ),
    .hCursor = LoadCursor(0, IDC_ARROW),
    .hbrBackground = (HBRUSH)(COLOR_WINDOW + 1),
-   .lpszClassName = L"Hello",
-   .hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL))
+   .lpszClassName = L"H",
+   .hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL) )
    };
-
    RegisterClassExW(&wcex);
    Window_Create();
+   
    return Tick();
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create() const
 {
-   const RECT &rect = AsConfig::Window_Main_Rect;
+   POINT start_point { 50, 50 };
+   int offset = 3;
+   int button_count = 3;
+	int button_width = 27;
+	int button_height = 20;
+	int window_width = button_width * button_count + offset * 2 + 1;
+	int window_height = button_height + offset * 2;
+
+   // !!! TEMP
+   AsConfig::Window_Main_Rect = { start_point.x, start_point.y, start_point.x + window_width, start_point.y + window_height };
+	AsConfig::Window_Main_Buttons = new RECT[button_count] {};
+	AsConfig::Window_Main_Buttons[0] = { start_point.x + offset, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
+	AsConfig::Window_Main_Buttons[1] = { start_point.x + offset + button_width, start_point.y + offset, start_point.x + button_width * 2 + offset, start_point.y + button_height + offset };
+	AsConfig::Window_Main_Buttons[2] = { start_point.x + offset + button_width * 2, start_point.y + offset, start_point.x + button_width + offset, start_point.y + button_height + offset };
+   // !!! TEMP END
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
-      L"Hello", L"Hello", WS_POPUP, rect.left, rect.top, rect.right, rect.bottom, 0, 0, Handle_Instance, 0);   // Create Window
+      L"H", L"H", WS_POPUP, start_point.x, start_point.y, window_width, window_height, 0, 0, Handle_Instance, 0);
 
    if (!AsConfig::Hwnd != 0)
       return;
@@ -145,12 +156,25 @@ void AsMain_Window::On_Paint(HWND hwnd)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
 {
-   int timer = 1;
-   AsClicker().Is_Running(timer);
+	int timer = 1;  // every 1 second
+   GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
+   
+	if (PtInRect(&AsConfig::Window_Main_Buttons[0], AsConfig::Cursor_Pos) )  // First button
+      AsClicker().Is_Running(timer, Anime_Stars_Cord);
+      return;
+
+	if (PtInRect(&AsConfig::Window_Main_Buttons[1], AsConfig::Cursor_Pos) )  // Second Button || Create Editable, save to array cords
+      return;
+
+	if (PtInRect(&AsConfig::Window_Main_Buttons[2], AsConfig::Cursor_Pos) )  // Exit button
+   {
+      PostQuitMessage(0);
+      return;
+   }
+
 
    std::this_thread::sleep_for(std::chrono::milliseconds(150) );  // Time to prepare windows
    AsConfig::Is_Playing = !AsConfig::Is_Playing;
-
    InvalidateRect(hwnd, 0, AsConfig::Is_Background);  // Need redraw image, just call WM_PAINT set image name
 
    if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
@@ -166,13 +190,23 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Draw_Image(HDC hdc, const wchar_t *image_path) const
 {
+   const int button_exit = 108;
+	const int button_width = 27;
+	const int button_height = 20;
+	const int button_third = 54;
    Gdiplus::Image *gdi_image;
    Gdiplus::Graphics graphics(hdc);
    
    gdi_image = new Gdiplus::Image(image_path);
    if (gdi_image->GetLastStatus() == Gdiplus::Ok)
-      graphics.DrawImage(gdi_image, 0, 0);  // show resized image in window
+   {
+      graphics.DrawImage(gdi_image, 0, 0);
+      
+      Gdiplus::Rect source_rect(button_exit, 0, button_width + 1, button_height);
+      Gdiplus::Rect destin_rect(button_third, 0, button_width + 1, button_height);
 
+      graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
+   }
    delete gdi_image;
 }
 //------------------------------------------------------------------------------------------------------------
