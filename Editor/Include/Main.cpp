@@ -20,9 +20,10 @@ AButton::~AButton()
 {
 }
 //------------------------------------------------------------------------------------------------------------
-AButton::AButton(int x, int y, EButton_Action button_action)
- : Width(x), Height(y), Button_Action(button_action), Button_Rect {}
+AButton::AButton(const int x_cord, const int y_cord, const EButton_Action button_action)
+ : Button_Width(x_cord), Button_Height(y_cord), Button_Action(button_action), Button_Rect {}
 {
+
 }
 //------------------------------------------------------------------------------------------------------------
 void AButton::Activate() const
@@ -33,10 +34,13 @@ void AButton::Activate() const
    {
    case EButton_Action::None:
       break;
-   case EButton_Action::Clicker:
+   case EButton_Action::Clicker_Start:
       AsClicker().Is_Running(timer, Anime_Stars_Cord);
       break;
-   case EButton_Action::Exit:
+   case EButton_Action::Clicker_Settings:
+      AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
+      break;
+   case EButton_Action::Clicker_Exit:
       PostQuitMessage(0);
       break;
    default:
@@ -56,15 +60,13 @@ AWindow::~AWindow()
 	delete Buttons_Array;
 }
 //------------------------------------------------------------------------------------------------------------
-AWindow::AWindow()
- : X(0), Y(0), Width(0), Height(0), Window_Offset(6), Buttons_Array(0)
+AWindow::AWindow(const int x_cord, const int y_cord)
+ : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Array(0)
 {
-   Width = Window_Offset + 1;
-   Height = Window_Offset + 1;
    Buttons_Array = new std::array<AButton *, 5>();
 }
 //------------------------------------------------------------------------------------------------------------
-void AWindow::Button_Click_Handle()
+void AWindow::On_Button_Clicked()
 {
    int i = 0;
    AButton *button = 0;
@@ -80,43 +82,28 @@ void AWindow::Button_Click_Handle()
    }
 }
 //------------------------------------------------------------------------------------------------------------
-void AWindow::Set_Location(int x, int y)
-{
-	X = x;
-	Y = y;
-}
-//------------------------------------------------------------------------------------------------------------
-void AWindow::Set_Size(int width, int height)
-{
-	Width = width;
-	Height = height;
-}
-//------------------------------------------------------------------------------------------------------------
 void AWindow::Add_Button(AButton *button)
 {
    int i = 0;
+   const int button_array_size = static_cast<int>(Buttons_Array->size() );
+	RECT &button_rect = button->Button_Rect;
 
    // 1.0. Add to array
-   for (i = 0; i < Buttons_Array->size(); i++)
-   {// !!! Can be better!
-
+   for (i = 0; i < button_array_size; i++)
       if (Buttons_Array->at(i) == 0)
-      {
-         Buttons_Array->at(i) = button;
          break;
-      }
-   }
-
-   // 1.1. Set button rect cords
-   button->Button_Rect.left = X + Window_Offset / 2 + button->Width * i;
-   button->Button_Rect.top = Y + Window_Offset / 2;
-   button->Button_Rect.right = button->Button_Rect.left + button->Width * i;
-   button->Button_Rect.bottom = button->Button_Rect.top + button->Height;
+   
+   // 1.1. Set button button_rect  cords
+   Buttons_Array->at(i) = button;
+   button_rect .left = Window_Rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
+   button_rect .top = Window_Rect.top + AsConfig::Window_Offset / 2;
+   button_rect .right = button_rect.left + button->Button_Width * i;
+   button_rect .bottom = button_rect.top + button->Button_Height;
 
    // 1.2. Resize window after add buttons
-   Width += button->Width;
-   if (Height < button->Height)
-      Height = button->Height + Window_Offset + 1;
+   Window_Rect.right += button->Button_Width;
+   if (Window_Rect.bottom < button->Button_Height)
+      Window_Rect.bottom = button->Button_Height + AsConfig::Window_Offset + 1;
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -163,7 +150,6 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    }
 }
 //------------------------------------------------------------------------------------------------------------
-
 
 
 
@@ -221,14 +207,14 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create()
 {
-   Window = new AWindow();
+   Window = new AWindow(50, 50);
 
-   Window->Set_Location(50, 50);  // Must be before add buttons
-   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker) );  // Or create button in window?
-   Window->Add_Button(new AButton(27, 20, EButton_Action::Exit) );  // Or create button in window?
+   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Start) );  // Or create button in window?
+   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Settings) );  // Or create button in window?
+   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Exit) );  // Or create button in window?
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
-      L"H", L"H", WS_POPUP, Window->X, Window->Y, Window->Width, Window->Height, 0, 0, Handle_Instance, 0);
+      L"H", L"H", WS_POPUP, Window->Window_Rect.left, Window->Window_Rect.top, Window->Window_Rect.right, Window->Window_Rect.bottom, 0, 0, Handle_Instance, 0);
 
    if (!AsConfig::Hwnd != 0)
       return;
@@ -258,14 +244,14 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
 
    // 1.1. Click Handle
    if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )  // If not hold LMB then check where clicked
-      Window->Button_Click_Handle();  // Check where button was clicked
+      Window->On_Button_Clicked();
 
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
    {// If hold LMB then move window
 
       std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Not every milliseconds get and move
       GetCursorPos(&AsConfig::Cursor_Pos);
-      MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window->Width, Window->Height, false);
+      MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window->Window_Rect.right, Window->Window_Rect.bottom, false);
    }
 }
 //------------------------------------------------------------------------------------------------------------

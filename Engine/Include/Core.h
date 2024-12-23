@@ -59,26 +59,17 @@ public:
 	~AsConfig();
 	static void Throw();
 
-	static EHUD_State HUD_State;
-
 	static constexpr BYTE Alpha_Visibility = 255;  // 255 - 100% / 2 - 50% / 4 - 25%
 	static constexpr bool Is_Draw_At_BG = true;  // if true draw background || if false clear background
 
 	static constexpr int Window_Background_Transparency = 255;  // If 255 - 100%
-	static constexpr int ID_Timer = 1;  // Timer Name, can be a lot
-	static constexpr int FPS = 1000;  // If need 24 frames per second - 1000 / 24
-	static constexpr int Max_Char_Length = 100;
-	static constexpr int Window_Height = 200;  // used to resize custom image
-	static constexpr int Window_Width = 150;  // -||-
+	static constexpr int Window_Offset = 3 * 2;  // -||-
 
 	//static constexpr COLORREF transparentColor = RGB(background_transparency, background_transparency, background_transparency);
 	static constexpr COLORREF transparentColor{ (Window_Background_Transparency, Window_Background_Transparency, Window_Background_Transparency) };  // !!! TEMP
 	
 	static HWND Hwnd;
-	static HDC Hdc;
 	static POINT Cursor_Pos;
-	static RECT Window_Main_Rect;
-	static RECT *Window_Main_Buttons;
 };
 //------------------------------------------------------------------------------------------------------------
 

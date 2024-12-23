@@ -7,9 +7,9 @@
 enum class EButton_Action : byte
 {
 	None,
-	Clicker,
+	Clicker_Start,
 	Clicker_Settings,
-	Exit
+	Clicker_Exit
 };
 //------------------------------------------------------------------------------------------------------------
 struct SMouse_Cords
@@ -43,14 +43,15 @@ class AButton
 {
 public:
 	~AButton();
-	AButton(int x, int y, EButton_Action button_action);
+	AButton(const int x_cord, const int y_cord, const EButton_Action button_action);
 
 	void Activate() const;
 
 	EButton_Action Button_Action;
-	int Width;
-	int Height;
+	int Button_Width;
+	int Button_Height;
 	RECT Button_Rect;
+
 	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
 };
 //------------------------------------------------------------------------------------------------------------
@@ -58,21 +59,15 @@ class AWindow
 {
 public:
 	~AWindow();
-	AWindow();
+	AWindow(const int x_cord, const int y_cord);
 
-	void Button_Click_Handle();
-	void Set_Location(int x, int y);
-	void Set_Size(int width, int height);
+	void On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
 	void Add_Button(AButton *button);
 
-	int X;
-	int Y;
-	int Width;
-	int Height;
-	std::array<AButton *, 5> *Buttons_Array;
+	RECT Window_Rect;
 
 private:
-	int Window_Offset;
+	std::array<AButton *, 5> *Buttons_Array;
 };
 //------------------------------------------------------------------------------------------------------------
 class AsClicker
@@ -112,8 +107,6 @@ private:
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
 	AWindow *Window = 0;
-	AButton *Button = 0;
-
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
