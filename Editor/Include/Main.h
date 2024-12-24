@@ -52,6 +52,7 @@ public:
 	int Button_Height;
 	RECT Button_Rect;
 
+	static constexpr SCoordinate Youtube_Emo_Cord{ 1357, 725 };  // 607 636 667 694
 	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
 };
 //------------------------------------------------------------------------------------------------------------
@@ -66,8 +67,7 @@ public:
 
 	RECT Window_Rect;
 
-private:
-	std::array<AButton *, 5> *Buttons_Array;
+	std::vector<AButton *> *Buttons_Vector;
 };
 //------------------------------------------------------------------------------------------------------------
 class AsClicker
@@ -110,7 +110,6 @@ private:
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	static constexpr SCoordinate Youtube_Emo_Cord { 1357, 725 };
 	static constexpr SCoordinate Twitch_Rewd_Cord { 1357, 725 };
 	static AsMain_Window *Self;
 };
@@ -124,7 +123,12 @@ private:
 #pragma region TASKS MAIN
 /*
 
-X	- Make Exit button
+X	- When move window button cords don`t change
+X     - But need to change it, how to do it?
+
+
+
+V	- Make Exit button
 
 
 X	- What if save curr user position end return to it?

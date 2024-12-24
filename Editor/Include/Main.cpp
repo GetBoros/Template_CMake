@@ -35,7 +35,7 @@ void AButton::Activate() const
    case EButton_Action::None:
       break;
    case EButton_Action::Clicker_Start:
-      AsClicker().Is_Running(timer, Anime_Stars_Cord);
+      AsClicker().Is_Running(timer, Youtube_Emo_Cord);
       break;
    case EButton_Action::Clicker_Settings:
       AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
@@ -55,15 +55,15 @@ void AButton::Activate() const
 // AWindow
 AWindow::~AWindow()
 {
-   for (auto &button: *Buttons_Array)
+   for (auto &button: *Buttons_Vector)
 		delete button;
-	delete Buttons_Array;
+	delete Buttons_Vector;
 }
 //------------------------------------------------------------------------------------------------------------
 AWindow::AWindow(const int x_cord, const int y_cord)
- : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Array(0)
+ : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0)
 {
-   Buttons_Array = new std::array<AButton *, 5>();
+	Buttons_Vector = new std::vector<AButton *>();
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::On_Button_Clicked()
@@ -71,9 +71,9 @@ void AWindow::On_Button_Clicked()
    int i = 0;
    AButton *button = 0;
 
-   for (i; i < Buttons_Array->size(); i++)
+   for (i; i < Buttons_Vector->size(); i++)
    {
-      button = Buttons_Array->at(i);
+      button = Buttons_Vector->at(i);
       if (PtInRect(&button->Button_Rect, AsConfig::Cursor_Pos) )  // First button
       {
          button->Activate();
@@ -84,21 +84,16 @@ void AWindow::On_Button_Clicked()
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Add_Button(AButton *button)
 {
-   int i = 0;
-   const int button_array_size = static_cast<int>(Buttons_Array->size() );
 	RECT &button_rect = button->Button_Rect;
-
-   // 1.0. Add to array
-   for (i = 0; i < button_array_size; i++)
-      if (Buttons_Array->at(i) == 0)
-         break;
+   const int i = static_cast<int>(Buttons_Vector->size() );
    
-   // 1.1. Set button button_rect  cords
-   Buttons_Array->at(i) = button;
-   button_rect .left = Window_Rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
-   button_rect .top = Window_Rect.top + AsConfig::Window_Offset / 2;
-   button_rect .right = button_rect.left + button->Button_Width * i;
-   button_rect .bottom = button_rect.top + button->Button_Height;
+   Buttons_Vector->push_back(button);  // Broke logic button with diff positions
+
+	// 1.1. Default button cords save to button_rect
+   button_rect.left = Window_Rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
+   button_rect.top = Window_Rect.top + AsConfig::Window_Offset / 2;
+   button_rect.right = button_rect.left + button->Button_Width;
+   button_rect.bottom = button_rect.top + button->Button_Height;
 
    // 1.2. Resize window after add buttons
    Window_Rect.right += button->Button_Width;
@@ -137,7 +132,7 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    {// !!! Refactoring
 
 		perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(test, Inputs_Mouses, 2, (timer) * /*150*/1000);  // Pressed at cord
+      perform_action(test, Inputs_Mouses, 2, (timer) * 1000);  // Pressed at cord
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
@@ -236,6 +231,9 @@ void AsMain_Window::On_Paint(HWND hwnd)
 void AsMain_Window::On_LMB_Down(HWND hwnd)
 {
    const int delay_ms = 150;
+   int i = 0;
+   AButton *button = 0;
+   RECT rect {};
 
    // 1.0. Call WM_PAINT and delay
    InvalidateRect(hwnd, 0, AsConfig::Is_Draw_At_BG);  // Need redraw image, just call WM_PAINT set image name
@@ -244,7 +242,11 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
 
    // 1.1. Click Handle
    if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )  // If not hold LMB then check where clicked
+   {// !!! Temp solution
+
       Window->On_Button_Clicked();
+      return;
+   }
 
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
    {// If hold LMB then move window
@@ -252,6 +254,19 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
       std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Not every milliseconds get and move
       GetCursorPos(&AsConfig::Cursor_Pos);
       MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window->Window_Rect.right, Window->Window_Rect.bottom, false);
+   }
+
+   // 1.2. Re-Save cords for buttons in array || 
+   GetWindowRect(hwnd, &rect);
+   for (i; i < Window->Buttons_Vector->size(); i++)
+	{
+		button = Window->Buttons_Vector->at(i);
+      if (!button != 0)
+         return;
+      button->Button_Rect.left = rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
+      button->Button_Rect.top = rect.top + AsConfig::Window_Offset / 2;
+      button->Button_Rect.right = button->Button_Rect.left + button->Button_Width * (i == 0 ? 1 : i);
+      button->Button_Rect.bottom = button->Button_Rect.top + button->Button_Height;
    }
 }
 //------------------------------------------------------------------------------------------------------------
