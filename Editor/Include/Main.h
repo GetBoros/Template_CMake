@@ -8,6 +8,7 @@ enum class EButton_Action : byte
 {
 	Clicker_Start,
 	Clicker_Settings,
+	Cliker_Record,
 	Clicker_Exit
 };
 //------------------------------------------------------------------------------------------------------------
@@ -129,6 +130,13 @@ V	- Make Exit button
 
 v	- When pressed at button draw border to show what button pressed!
 V		- How to activate button after draw border?
+
+X	- How to Resize Window and expose images with paterns
+V		- Example in On_Paint
+
+X	- Create button what stored all user actions, and can be played, paused, stopped, saved, loaded
+X		- IO to file, or nah?
+
 
 X	- When pressed Clicker_Settings start record user inputs
 X		- Pressing buttons, clicking at location elsewhere.

@@ -36,6 +36,7 @@ void AButton::Activate() const
       AsClicker().Is_Running(timer, Youtube_Emo_Cord);
       break;
    case EButton_Action::Clicker_Settings:
+
       //AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
       break;
    case EButton_Action::Clicker_Exit:
@@ -198,11 +199,10 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create()
 {
-   Window = new AWindow(50, 50);
+   Window = new AWindow(50, 50);  // Starting window locations
 
-   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Start) );  // Or create button in window?
-   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Settings) );  // Or create button in window?
-   Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Exit) );  // Or create button in window?
+   for (int i = 0; i <= (int)EButton_Action::Clicker_Exit; i++)  // Create custom buttons and resize AWindow
+      Window->Add_Button(new AButton(27, 20, (EButton_Action)i ) );
 
    AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,  // WS_EX_DLGMODALFRAME offsets
       L"H", L"H", WS_POPUP, Window->Window_Rect.left, Window->Window_Rect.top, Window->Window_Rect.right, Window->Window_Rect.bottom, 0, 0, Handle_Instance, 0);
@@ -227,7 +227,15 @@ void AsMain_Window::On_Paint(HWND hwnd)
    EndPaint(AsConfig::Hwnd, &ps);
 
    if (Is_Button_Clicked)
+   {// Perfect
+
+      // Second button must change window size | Redraw Image | Draw new button
+      Window->Window_Rect.bottom = Window->Window_Rect.bottom * 2;
+      // Created and added new buttons to window_vector
+      SetWindowPos(hwnd, NULL, 0, 0, Window->Window_Rect.right, Window->Window_Rect.bottom, SWP_NOZORDER | SWP_NOMOVE);
+
       Window->Update_Button_Active();
+   }
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
