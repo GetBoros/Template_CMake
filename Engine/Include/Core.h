@@ -71,6 +71,7 @@ public:
 	
 	static HWND Hwnd;
 	static POINT Cursor_Pos;
+	static int Active_Button;
 };
 //------------------------------------------------------------------------------------------------------------
 

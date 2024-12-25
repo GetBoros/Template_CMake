@@ -63,6 +63,7 @@ AsTools::AsTools()
 // AsConfig
 HWND AsConfig::Hwnd = 0;
 POINT AsConfig::Cursor_Pos = {};
+int AsConfig::Active_Button = 0;
 //------------------------------------------------------------------------------------------------------------
 AsConfig::~AsConfig()
 {

@@ -32,13 +32,11 @@ void AButton::Activate() const
 
    switch (Button_Action)
    {
-   case EButton_Action::None:
-      break;
    case EButton_Action::Clicker_Start:
       AsClicker().Is_Running(timer, Youtube_Emo_Cord);
       break;
    case EButton_Action::Clicker_Settings:
-      AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
+      //AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
       break;
    case EButton_Action::Clicker_Exit:
       PostQuitMessage(0);
@@ -64,22 +62,15 @@ AWindow::AWindow(const int x_cord, const int y_cord)
  : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0)
 {
 	Buttons_Vector = new std::vector<AButton *>();
+	Buttons_Vector->reserve(3);  // !!! Change to constexpr
 }
 //------------------------------------------------------------------------------------------------------------
-void AWindow::On_Button_Clicked()
+[[nodiscard]] int AWindow::On_Button_Clicked()
 {
-   int i = 0;
-   AButton *button = 0;
-
-   for (i; i < Buttons_Vector->size(); i++)
-   {
-      button = Buttons_Vector->at(i);
-      if (PtInRect(&button->Button_Rect, AsConfig::Cursor_Pos) )  // First button
-      {
-         button->Activate();
-         break;
-      }
-   }
+   for (int i = 0; i < Buttons_Vector->size(); i++)
+      if (PtInRect(&Buttons_Vector->at(i)->Button_Rect, AsConfig::Cursor_Pos) )  // First button
+         return AsConfig::Active_Button = i;
+   return 0;
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Add_Button(AButton *button)
@@ -99,6 +90,11 @@ void AWindow::Add_Button(AButton *button)
    Window_Rect.right += button->Button_Width;
    if (Window_Rect.bottom < button->Button_Height)
       Window_Rect.bottom = button->Button_Height + AsConfig::Window_Offset + 1;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Update_Button_Active()
+{
+	Buttons_Vector->at(AsConfig::Active_Button)->Activate();
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -170,7 +166,7 @@ AsMain_Window::~AsMain_Window()
 }
 //------------------------------------------------------------------------------------------------------------
 AsMain_Window::AsMain_Window()
- : Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL)
+ : Button_Active(EButton_Action::Clicker_Exit), Is_Button_Clicked(false), Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL)
 {
    Self = this;
    Gdiplus::GdiplusStartupInput gdiplusStartupInput;   // Init GDI+
@@ -208,7 +204,7 @@ void AsMain_Window::Window_Create()
    Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Settings) );  // Or create button in window?
    Window->Add_Button(new AButton(27, 20, EButton_Action::Clicker_Exit) );  // Or create button in window?
 
-   AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,
+   AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,  // WS_EX_DLGMODALFRAME offsets
       L"H", L"H", WS_POPUP, Window->Window_Rect.left, Window->Window_Rect.top, Window->Window_Rect.right, Window->Window_Rect.bottom, 0, 0, Handle_Instance, 0);
 
    if (!AsConfig::Hwnd != 0)
@@ -221,17 +217,24 @@ void AsMain_Window::Window_Create()
 void AsMain_Window::On_Paint(HWND hwnd)
 {
    PAINTSTRUCT ps {};
-   HDC hdc = BeginPaint(AsConfig::Hwnd, &ps);
+   HDC hdc = BeginPaint(hwnd, &ps);
 
    Draw_Image(hdc, L"Pictures/Main_Image.png");
 
+   if (Button_Active != EButton_Action::Clicker_Exit)
+      Draw_Active_Button(hdc);
+
    EndPaint(AsConfig::Hwnd, &ps);
+
+   if (Is_Button_Clicked)
+      Window->Update_Button_Active();
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
 {
    const int delay_ms = 150;
    int i = 0;
+   int button_vector_size = 0;
    AButton *button = 0;
    RECT rect {};
 
@@ -242,12 +245,13 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
 
    // 1.1. Click Handle
    if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )  // If not hold LMB then check where clicked
-   {// !!! Temp solution
-
-      Window->On_Button_Clicked();
+   {
+      Button_Active = (EButton_Action)Window->On_Button_Clicked();  // Get active button
+		Is_Button_Clicked = true;
       return;
    }
 
+	// 1.2. Move Window
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
    {// If hold LMB then move window
 
@@ -256,13 +260,13 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
       MoveWindow(hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window->Window_Rect.right, Window->Window_Rect.bottom, false);
    }
 
-   // 1.2. Re-Save cords for buttons in array || 
+   // 1.3. Re-Save cords for buttons in array
    GetWindowRect(hwnd, &rect);
-   for (i; i < Window->Buttons_Vector->size(); i++)
+   button_vector_size = static_cast<int>(Window->Buttons_Vector->size() );
+
+   for (i; i < button_vector_size; i++)
 	{
 		button = Window->Buttons_Vector->at(i);
-      if (!button != 0)
-         return;
       button->Button_Rect.left = rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
       button->Button_Rect.top = rect.top + AsConfig::Window_Offset / 2;
       button->Button_Rect.right = button->Button_Rect.left + button->Button_Width * (i == 0 ? 1 : i);
@@ -290,6 +294,25 @@ void AsMain_Window::Draw_Image(HDC hdc, const wchar_t *image_path) const
       graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
    }
    delete gdi_image;
+}
+//------------------------------------------------------------------------------------------------------------
+void AsMain_Window::Draw_Active_Button(HDC hdc)
+{
+   const int width = Window->Buttons_Vector->at(0)->Button_Width;
+   const int height = Window->Buttons_Vector->at(0)->Button_Height;  // while only one raw always 19
+	const int index = static_cast<int>(Button_Active);
+   HPEN pen_green = CreatePen(PS_SOLID, 1, RGB(0, 255, 0) );  // Создаем зеленую ручку для рисования линий
+   HGDIOBJ pen_prev = SelectObject(hdc, pen_green);
+   RECT rect { width * index, 0, width * (index + 1), height - 1 };
+
+   MoveToEx(hdc, rect.left, rect.top, 0);
+   LineTo(hdc, rect.right, rect.top);
+   LineTo(hdc, rect.right, rect.bottom);
+   LineTo(hdc, rect.left, rect.bottom);
+   LineTo(hdc, rect.left, rect.top);
+
+   SelectObject(hdc, pen_prev);
+   DeleteObject(pen_green);
 }
 //------------------------------------------------------------------------------------------------------------
 int AsMain_Window::Tick()

@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------------------------------------
 enum class EButton_Action : byte
 {
-	None,
 	Clicker_Start,
 	Clicker_Settings,
 	Clicker_Exit
@@ -62,8 +61,9 @@ public:
 	~AWindow();
 	AWindow(const int x_cord, const int y_cord);
 
-	void On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
+	int On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
 	void Add_Button(AButton *button);
+	void Update_Button_Active();
 
 	RECT Window_Rect;
 
@@ -97,11 +97,12 @@ private:
 	void Window_Create();  // Or Add || Better create class widget
 	void On_Paint(HWND hwnd);
 	void On_LMB_Down(HWND hwnd);
-
 	void Draw_Image(HDC hdc, const wchar_t *image_path) const;
-
+	void Draw_Active_Button(HDC hdc);
 	int Tick();
 
+	EButton_Action Button_Active;
+	bool Is_Button_Clicked;
 	int Cmd_Show;
 	int Tick_Seconds;
 	HINSTANCE Handle_Instance;
@@ -123,13 +124,19 @@ private:
 #pragma region TASKS MAIN
 /*
 
-X	- When move window button cords don`t change
-X     - But need to change it, how to do it?
-
-
-
+V	- When move window button cords don`t change
 V	- Make Exit button
 
+v	- When pressed at button draw border to show what button pressed!
+V		- How to activate button after draw border?
+
+X	- When pressed Clicker_Settings start record user inputs
+X		- Pressing buttons, clicking at location elsewhere.
+X			- Save those actions to file
+X		- When pressed Clicker_Start start those actions
+X			- Resize Window and expose images with paterns
+X			- 
+X			- How to expose user array of actions, with images?
 
 X	- What if save curr user position end return to it?
 		- While thread sleep return to prev custom location
