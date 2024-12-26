@@ -2,6 +2,16 @@
 #include "Core.h"
 
 //------------------------------------------------------------------------------------------------------------
+enum class EWindow_State : byte
+{
+	None,
+	Draw,
+	Down,
+	Hold,
+	Exit
+
+};
+//------------------------------------------------------------------------------------------------------------
 struct SCoordinate
 {
 	consteval SCoordinate(int x, int y) : x(x), y(y) {}
@@ -47,14 +57,28 @@ class AWindow
 {
 public:
 	~AWindow();
-	AWindow(const int x_cord, const int y_cord);
+	AWindow(const int x_cord, const int y_cord);  // Window start Location
+
+	void Init();  // For now just create Clicker app
+	void Handle(const EWindow_State window_state);  // Handle window state
 
 	int On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
 	void Add_Button(AButton *button);
 	void Update_Button_Active();
 
+	EWindow_State Window_State;
 	RECT Window_Rect;
 
 	std::vector<AButton *> *Buttons_Vector;
+
+private:
+	void Draw_Frame();
+	void Draw_Image() const;
+	void LKM_Down();
+	void LKM_Hold();
+
+	HDC Hdc;
+	EButton_Action Button_Active;
+
 };
 //------------------------------------------------------------------------------------------------------------

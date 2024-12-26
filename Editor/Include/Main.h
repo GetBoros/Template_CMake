@@ -3,13 +3,13 @@
 #include <Window.h>
 
 //------------------------------------------------------------------------------------------------------------
-class AsMain_Window
+class AsEngine
 {
 public:
-	~AsMain_Window();
-	AsMain_Window();
+	~AsEngine();
+	AsEngine();
 
-	int APIENTRY Main(HINSTANCE handle_instance, int cmd_show);
+	int APIENTRY Update(HINSTANCE handle_instance, int cmd_show);
 
 private:
 	int Tick() const;
@@ -17,8 +17,9 @@ private:
 	void On_Paint(HWND hwnd);
 	void On_LMB_Down(HWND hwnd);
 	void On_Timer_Update();
-	void Draw_Image(HDC hdc, const wchar_t *image_path) const;
 	void Draw_Active_Button(HDC hdc);
+
+	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	EButton_Action Button_Active;
 	bool Is_Button_Clicked;
@@ -29,9 +30,8 @@ private:
 	AWindow *Window;
 	POINT Cursor_Stored;
 
-	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	static AsMain_Window *Self;
+	static AsEngine *Self;
 };
 //------------------------------------------------------------------------------------------------------------
 

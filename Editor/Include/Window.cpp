@@ -90,10 +90,41 @@ AWindow::~AWindow()
 }
 //------------------------------------------------------------------------------------------------------------
 AWindow::AWindow(const int x_cord, const int y_cord)
- : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0)
+ : Window_State(EWindow_State::None), Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0),
+   Hdc(0), Button_Active(EButton_Action::Clicker_Exit)
 {
 	Buttons_Vector = new std::vector<AButton *>();
 	Buttons_Vector->reserve(3);  // !!! Change to constexpr
+   Init();
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Init()
+{
+   for (int i = 0; i <= (int)EButton_Action::Clicker_Exit; i++)  // Create custom buttons and resize AWindow
+     Add_Button(new AButton(27, 20, (EButton_Action)i) );
+
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Handle(const EWindow_State window_state)
+{
+   switch (window_state)
+   {
+   case EWindow_State::None:
+      break;
+   case EWindow_State::Draw:
+      Draw_Frame();
+      break;
+   case EWindow_State::Down:
+      LKM_Down();
+      break;
+   case EWindow_State::Hold:
+      LKM_Hold();
+      break;
+   case EWindow_State::Exit:
+      break;
+   default:
+      break;
+   }
 }
 //------------------------------------------------------------------------------------------------------------
 [[nodiscard]] int AWindow::On_Button_Clicked()
@@ -126,5 +157,77 @@ void AWindow::Add_Button(AButton *button)
 void AWindow::Update_Button_Active()
 {
 	Buttons_Vector->at(AsConfig::Active_Button)->Activate();
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Draw_Frame()
+{
+   PAINTSTRUCT ps{};
+   Hdc = BeginPaint(AsConfig::Hwnd, &ps);
+
+   Draw_Image();
+   //if (Button_Active != EButton_Action::Clicker_Exit)
+   //   Draw_Active_Button(hdc);
+   EndPaint(AsConfig::Hwnd, &ps);
+
+   //if (Is_Button_Clicked)
+   //   Window->Update_Button_Active();
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Draw_Image() const
+{
+   const int button_exit = 108;
+	const int button_width = 27;
+	const int button_height = 20;
+	const int button_third = 54;
+   Gdiplus::Image *gdi_image;
+   Gdiplus::Graphics graphics(Hdc);
+   
+   gdi_image = new Gdiplus::Image(AsConfig::Clicker_Image_Folder() );
+   if (gdi_image->GetLastStatus() == Gdiplus::Ok)
+   {
+      graphics.DrawImage(gdi_image, 0, 0);
+      
+      Gdiplus::Rect source_rect(button_exit, 0, button_width + 1, button_height);
+      Gdiplus::Rect destin_rect(button_third, 0, button_width + 1, button_height);
+
+      graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
+   }
+   delete gdi_image;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::LKM_Down()
+{
+   GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
+   
+   Button_Active = (EButton_Action)On_Button_Clicked();  // Get active button
+   //Is_Button_Clicked = true;
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::LKM_Hold()
+{
+   int i = 0;
+   int button_vector_size = static_cast<int>(Buttons_Vector->size() );
+   AButton *button = 0;
+   RECT rect {};
+
+   // 1.2. Move Window
+   while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+   {// If hold LMB then move window
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(10) );  // Delay to move window
+      GetCursorPos(&AsConfig::Cursor_Pos);
+      MoveWindow(AsConfig::Hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window_Rect.right, Window_Rect.bottom, false);
+   }
+
+   GetWindowRect(AsConfig::Hwnd, &rect);  // Get current window rect transform
+
+   for (i; i < button_vector_size; i++)
+   {
+      button = Buttons_Vector->at(i);
+      button->Button_Rect.left = rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
+      button->Button_Rect.top = rect.top + AsConfig::Window_Offset / 2;
+      button->Button_Rect.right = button->Button_Rect.left + button->Button_Width;
+      button->Button_Rect.bottom = button->Button_Rect.top + button->Button_Height;
+   }
 }
 //------------------------------------------------------------------------------------------------------------
