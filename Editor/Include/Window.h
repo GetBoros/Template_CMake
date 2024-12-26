@@ -2,14 +2,6 @@
 #include "Core.h"
 
 //------------------------------------------------------------------------------------------------------------
-enum class EButton_Action : byte
-{
-	Clicker_Start,
-	Clicker_Settings,
-	Cliker_Record,
-	Clicker_Exit
-};
-//------------------------------------------------------------------------------------------------------------
 struct SCoordinate
 {
 	consteval SCoordinate(int x, int y) : x(x), y(y) {}
@@ -39,14 +31,16 @@ public:
 	AButton(const int x_cord, const int y_cord, const EButton_Action button_action);
 
 	void Activate() const;
-
+	
 	EButton_Action Button_Action;
 	int Button_Width;
 	int Button_Height;
 	RECT Button_Rect;
-
+	
+private:
+	static constexpr SCoordinate Twitch_Rewd_Cord{ 1357, 725 };
 	static constexpr SCoordinate Youtube_Emo_Cord{ 1357, 725 };  // 607 636 667 694
-	static constexpr SCoordinate Anime_Stars_Cord{ 1181, 705 };
+	static constexpr SCoordinate Anime_Stars_Cord{ 1111, 711 };
 };
 //------------------------------------------------------------------------------------------------------------
 class AWindow
@@ -56,11 +50,11 @@ public:
 	AWindow(const int x_cord, const int y_cord);
 
 	int On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
-	void Add_Button(AButton* button);
+	void Add_Button(AButton *button);
 	void Update_Button_Active();
 
 	RECT Window_Rect;
 
-	std::vector<AButton*>* Buttons_Vector;
+	std::vector<AButton *> *Buttons_Vector;
 };
 //------------------------------------------------------------------------------------------------------------

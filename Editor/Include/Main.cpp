@@ -36,7 +36,8 @@ AsMain_Window::~AsMain_Window()
 }
 //------------------------------------------------------------------------------------------------------------
 AsMain_Window::AsMain_Window()
- : Button_Active(EButton_Action::Clicker_Exit), Is_Button_Clicked(false), Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL)
+ : Button_Active(EButton_Action::Clicker_Exit), Is_Button_Clicked(false), Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL),
+   Window(0), Cursor_Stored {}
 {
    Self = this;
    Gdiplus::GdiplusStartupInput gdiplusStartupInput;   // Init GDI+
@@ -66,6 +67,23 @@ int AsMain_Window::Main(HINSTANCE handle_instance, int cmd_show)
    return Tick();
 }
 //------------------------------------------------------------------------------------------------------------
+int AsMain_Window::Tick() const
+{
+   HACCEL haccel_table = 0;
+   MSG msg {};
+
+   haccel_table = LoadAccelerators(Handle_Instance, MAKEINTRESOURCE(IDC_WINDOWSPROJECT1) );
+   while (GetMessage(&msg, 0, 0, 0) )  // Main message loop:
+   {
+      if (!TranslateAccelerator(msg.hwnd, haccel_table, &msg) )
+      {
+         TranslateMessage(&msg);
+         DispatchMessage(&msg);
+      }
+   }
+   return (int)msg.wParam;
+}
+//------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Window_Create()
 {
    Window = new AWindow(50, 50);  // Starting window locations
@@ -88,23 +106,13 @@ void AsMain_Window::On_Paint(HWND hwnd)
    PAINTSTRUCT ps {};
    HDC hdc = BeginPaint(hwnd, &ps);
 
-   Draw_Image(hdc, L"Pictures/Main_Image.png");
-
+   Draw_Image(hdc, AsConfig::Clicker_Image_Folder() );
    if (Button_Active != EButton_Action::Clicker_Exit)
       Draw_Active_Button(hdc);
-
    EndPaint(AsConfig::Hwnd, &ps);
 
    if (Is_Button_Clicked)
-   {// Perfect
-
-      // Second button must change window size | Redraw Image | Draw new button
-      Window->Window_Rect.bottom = Window->Window_Rect.bottom * 2;
-      // Created and added new buttons to window_vector
-      SetWindowPos(hwnd, NULL, 0, 0, Window->Window_Rect.right, Window->Window_Rect.bottom, SWP_NOZORDER | SWP_NOMOVE);
-
       Window->Update_Button_Active();
-   }
 }
 //------------------------------------------------------------------------------------------------------------
 void AsMain_Window::On_LMB_Down(HWND hwnd)
@@ -151,6 +159,17 @@ void AsMain_Window::On_LMB_Down(HWND hwnd)
    }
 }
 //------------------------------------------------------------------------------------------------------------
+void AsMain_Window::On_Timer_Update()
+{
+   int is_pressed = 0x8000;
+   if (GetAsyncKeyState(VK_CONTROL) & is_pressed)
+   {
+      GetCursorPos(&Cursor_Stored);
+      KillTimer(AsConfig::Hwnd, 1);
+   }
+
+}
+//------------------------------------------------------------------------------------------------------------
 void AsMain_Window::Draw_Image(HDC hdc, const wchar_t *image_path) const
 {
    const int button_exit = 108;
@@ -192,24 +211,6 @@ void AsMain_Window::Draw_Active_Button(HDC hdc)
    DeleteObject(pen_green);
 }
 //------------------------------------------------------------------------------------------------------------
-int AsMain_Window::Tick()
-{
-   HACCEL hAccelTable = 0;
-   MSG msg {};
-
-   hAccelTable = LoadAccelerators(Handle_Instance, MAKEINTRESOURCE(IDC_WINDOWSPROJECT1) );
-   while (GetMessage(&msg, 0, 0, 0) )  // Main message loop:
-   {
-      if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg) )
-      {
-         TranslateMessage(&msg);
-         DispatchMessage(&msg);
-      }
-   }
-
-   return (int)msg.wParam;
-}
-//------------------------------------------------------------------------------------------------------------
 LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
    switch (message)
@@ -219,8 +220,7 @@ LRESULT AsMain_Window::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, 
       break;
 
    case WM_TIMER:
-      SetWindowPos(hWnd, HWND_TOPMOST, 200, 200, 0, 0, SWP_NOSIZE);
-      InvalidateRect(hWnd, 0, AsConfig::Is_Draw_At_BG);  // Call WM_PAINT, draw all with background color
+      Self->On_Timer_Update();
       break;
 
    case WM_PAINT:

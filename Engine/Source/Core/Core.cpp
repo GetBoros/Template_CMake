@@ -64,6 +64,7 @@ AsTools::AsTools()
 HWND AsConfig::Hwnd = 0;
 POINT AsConfig::Cursor_Pos = {};
 int AsConfig::Active_Button = 0;
+int AsConfig::Clicker_Timer = 5;
 //------------------------------------------------------------------------------------------------------------
 AsConfig::~AsConfig()
 {
@@ -72,5 +73,10 @@ AsConfig::~AsConfig()
 void AsConfig::Throw()
 {
 	return throw 13;
+}
+//------------------------------------------------------------------------------------------------------------
+const wchar_t *AsConfig::Clicker_Image_Folder()
+{
+   return L"Pictures/Main_Image.png";
 }
 //------------------------------------------------------------------------------------------------------------

@@ -16,6 +16,8 @@ AsClicker::AsClicker()
 //------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
 {
+   const SCoordinate button_update_cord { 1262, 708 };  // Update
+   const SCoordinate button_accept_cord { 1106, 706 };  // Accept
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
       SetCursorPos(cords.x, cords.y);  // After each set cursor need return to prev position
@@ -24,10 +26,10 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    };
 
    while (true)
-   {// !!! Refactoring
-
-		perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(test, Inputs_Mouses, 2, (timer) * 1000);  // Pressed at cord
+   {
+		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
+      perform_action(button_update_cord, Inputs_Mouses, 2, (1) * 1000);  // Pressed at cord
+      perform_action(button_accept_cord, Inputs_Mouses, 2, (timer) * 1000);  // Pressed at cord
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
@@ -36,7 +38,6 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
          PostQuitMessage(0);
          return 0;
       }
-
    }
 }
 //------------------------------------------------------------------------------------------------------------
@@ -57,16 +58,16 @@ AButton::AButton(const int x_cord, const int y_cord, const EButton_Action button
 //------------------------------------------------------------------------------------------------------------
 void AButton::Activate() const
 {
-   const int timer = 1;  // !!! Move elsewhere every 1 second
+   int yy = 0;
 
    switch (Button_Action)
    {
    case EButton_Action::Clicker_Start:
-      AsClicker().Is_Running(timer, Youtube_Emo_Cord);
+      AsClicker().Is_Running(AsConfig::Clicker_Timer, Anime_Stars_Cord);
       break;
    case EButton_Action::Clicker_Settings:
+      SetTimer(AsConfig::Hwnd, 1, 100, 0);
 
-      //AsConfig::Throw();  // !!! Clicker Setting, have no idea what to do
       break;
    case EButton_Action::Clicker_Exit:
       PostQuitMessage(0);

@@ -12,12 +12,13 @@ public:
 	int APIENTRY Main(HINSTANCE handle_instance, int cmd_show);
 
 private:
+	int Tick() const;
 	void Window_Create();  // Or Add || Better create class widget
 	void On_Paint(HWND hwnd);
 	void On_LMB_Down(HWND hwnd);
+	void On_Timer_Update();
 	void Draw_Image(HDC hdc, const wchar_t *image_path) const;
 	void Draw_Active_Button(HDC hdc);
-	int Tick();
 
 	EButton_Action Button_Active;
 	bool Is_Button_Clicked;
@@ -25,11 +26,11 @@ private:
 	int Tick_Seconds;
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
-	AWindow *Window = 0;
+	AWindow *Window;
+	POINT Cursor_Stored;
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	static constexpr SCoordinate Twitch_Rewd_Cord { 1357, 725 };
 	static AsMain_Window *Self;
 };
 //------------------------------------------------------------------------------------------------------------
@@ -41,6 +42,8 @@ private:
 //------------------------------------------------------------------------------------------------------------
 #pragma region TASKS MAIN
 /*
+
+X	- 
 
 V	- When move window button cords don`t change
 V	- Make Exit button
