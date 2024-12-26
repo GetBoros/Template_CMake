@@ -20,15 +20,12 @@ private:
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	EButton_Action Button_Active;
-	bool Is_Button_Clicked;
 	int Cmd_Show;
-	int Tick_Seconds;
+	int Tick_Seconds;  // !!! Delete
 	HINSTANCE Handle_Instance;
 	ULONG_PTR GDI_Plus_Token;
 	AWindow *Window;
-	POINT Cursor_Stored;
-
+	POINT Cursor_Stored;  // !!! Delete
 
 	static AsEngine *Self;
 };

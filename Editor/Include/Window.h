@@ -9,7 +9,6 @@ enum class EWindow_State : byte
 	Down,
 	Hold,
 	Exit
-
 };
 //------------------------------------------------------------------------------------------------------------
 struct SCoordinate
@@ -40,15 +39,17 @@ public:
 	~AButton();
 	AButton(const int x_cord, const int y_cord, const EButton_Action button_action, const RECT &window_rect);
 
-	void Handler() const;
-	void Activate() const;
-	
-	EButton_Action Button_Action;
-	int Button_Width;
-	int Button_Height;
-	RECT Button_Rect;
+	void Handler(const EButton_Action button_action) const;
 	
 private:
+	void LKM_Down() const;
+	void Update_Rect() const;
+
+	const EButton_Action Button_Action;
+	const int Button_Width;
+	const int Button_Height;
+	mutable RECT Button_Rect;
+
 	static constexpr SCoordinate Twitch_Rewd_Cord{ 1357, 725 };
 	static constexpr SCoordinate Youtube_Emo_Cord{ 1357, 725 };  // 607 636 667 694
 	static constexpr SCoordinate Anime_Stars_Cord{ 1111, 711 };
@@ -63,20 +64,16 @@ public:
 	void Init();  // For now just create Clicker app
 	void Handle(const EWindow_State window_state);  // Handle window state
 
-	int On_Button_Clicked();  // Used AsConfig::Cursor_Pos to check where clicked mouse
-	void Update_Button_Active();
-
 	RECT Window_Rect;
 
 private:
 	void Draw_Frame();
 	void Draw_Image() const;
-	void Draw_Active();
+	void Draw_Active();  // !!! Or must be in button?
 	void LKM_Down();
 	void LKM_Hold();
 
 	HDC Hdc;
-	EButton_Action Button_Active;
 	std::vector<AButton *> *Buttons_Vector;
 };
 //------------------------------------------------------------------------------------------------------------

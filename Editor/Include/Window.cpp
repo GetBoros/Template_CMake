@@ -59,30 +59,46 @@ AButton::AButton(const int x_cord, const int y_cord, const EButton_Action button
    Button_Rect.bottom = Button_Rect.top + Button_Height;
 }
 //------------------------------------------------------------------------------------------------------------
-void AButton::Handler() const
+void AButton::Handler(const EButton_Action button_action) const
 {
-
-}
-//------------------------------------------------------------------------------------------------------------
-void AButton::Activate() const
-{
-   int yy = 0;
-
-   switch (Button_Action)
+   switch (button_action)
    {
    case EButton_Action::Clicker_Start:
       AsClicker().Is_Running(AsConfig::Clicker_Timer, Anime_Stars_Cord);
       break;
    case EButton_Action::Clicker_Settings:
-      SetTimer(AsConfig::Hwnd, 1, 100, 0);
-
+      SetTimer(AsConfig::Hwnd, 1, 100, 0);  // ID(1), ms(100)
       break;
    case EButton_Action::Clicker_Exit:
       PostQuitMessage(0);
       break;
+   case EButton_Action::Clicker_Down:
+      LKM_Down();
+      break;
+   case EButton_Action::Clicker_Update_Rect:
+      Update_Rect();
+      break;
    default:
+      AsConfig::Throw();
       break;
    }
+}
+//------------------------------------------------------------------------------------------------------------
+void AButton::LKM_Down() const
+{
+   if (PtInRect(&Button_Rect, AsConfig::Cursor_Pos) )  // First button
+      Handler(Button_Action);
+}
+//------------------------------------------------------------------------------------------------------------
+void AButton::Update_Rect() const
+{
+   RECT rect {};
+   GetWindowRect(AsConfig::Hwnd, &rect);  // Get current window rect transform
+
+   Button_Rect.left = rect.left + AsConfig::Window_Offset / 2 + Button_Width * (int)Button_Action;
+   Button_Rect.top = rect.top + AsConfig::Window_Offset / 2;
+   Button_Rect.right = Button_Rect.left + Button_Width;
+   Button_Rect.bottom = Button_Rect.top + Button_Height;
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -99,7 +115,7 @@ AWindow::~AWindow()
 //------------------------------------------------------------------------------------------------------------
 AWindow::AWindow(const int x_cord, const int y_cord)
  : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0),
-   Hdc(0), Button_Active(EButton_Action::Clicker_Exit)
+   Hdc(0)
 {
 	Buttons_Vector = new std::vector<AButton *>();
 	Buttons_Vector->reserve(3);
@@ -141,31 +157,14 @@ void AWindow::Handle(const EWindow_State window_state)
    }
 }
 //------------------------------------------------------------------------------------------------------------
-[[nodiscard]] int AWindow::On_Button_Clicked()
-{
-   for (int i = 0; i < Buttons_Vector->size(); i++)
-      if (PtInRect(&Buttons_Vector->at(i)->Button_Rect, AsConfig::Cursor_Pos) )  // First button
-         return AsConfig::Active_Button = i;
-   return 0;
-}
-//------------------------------------------------------------------------------------------------------------
-void AWindow::Update_Button_Active()
-{
-	Buttons_Vector->at(AsConfig::Active_Button)->Activate();
-}
-//------------------------------------------------------------------------------------------------------------
 void AWindow::Draw_Frame()
 {
    PAINTSTRUCT ps{};
    Hdc = BeginPaint(AsConfig::Hwnd, &ps);
 
    Draw_Image();
-   //if (Button_Active != EButton_Action::Clicker_Exit)
-   //   Draw_Active_Button(hdc);
-   EndPaint(AsConfig::Hwnd, &ps);
 
-   //if (Is_Button_Clicked)
-   //   Window->Update_Button_Active();
+   EndPaint(AsConfig::Hwnd, &ps);
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Draw_Image() const
@@ -192,40 +191,33 @@ void AWindow::Draw_Image() const
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Draw_Active()
 {
-   const int width = Buttons_Vector->at(0)->Button_Width;
-   const int height = Buttons_Vector->at(0)->Button_Height;  // while only one raw always 19
-	const int index = static_cast<int>(Button_Active);
-   HPEN pen_green = CreatePen(PS_SOLID, 1, RGB(0, 255, 0) );  // Создаем зеленую ручку для рисования линий
-   HGDIOBJ pen_prev = SelectObject(Hdc, pen_green);
-   RECT rect { width * index, 0, width * (index + 1), height - 1 };
+ //  const int width = Buttons_Vector->at(0)->Button_Width;
+ //  const int height = Buttons_Vector->at(0)->Button_Height;  // while only one raw always 19
+	//const int index = static_cast<int>(Button_Active);
+ //  HPEN pen_green = CreatePen(PS_SOLID, 1, RGB(0, 255, 0) );  // Создаем зеленую ручку для рисования линий
+ //  HGDIOBJ pen_prev = SelectObject(Hdc, pen_green);
+ //  RECT rect { width * index, 0, width * (index + 1), height - 1 };
 
-   MoveToEx(Hdc, rect.left, rect.top, 0);
-   LineTo(Hdc, rect.right, rect.top);
-   LineTo(Hdc, rect.right, rect.bottom);
-   LineTo(Hdc, rect.left, rect.bottom);
-   LineTo(Hdc, rect.left, rect.top);
+ //  MoveToEx(Hdc, rect.left, rect.top, 0);
+ //  LineTo(Hdc, rect.right, rect.top);
+ //  LineTo(Hdc, rect.right, rect.bottom);
+ //  LineTo(Hdc, rect.left, rect.bottom);
+ //  LineTo(Hdc, rect.left, rect.top);
 
-   SelectObject(Hdc, pen_prev);
-   DeleteObject(pen_green);
+ //  SelectObject(Hdc, pen_prev);
+ //  DeleteObject(pen_green);
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::LKM_Down()
 {
    GetCursorPos(&AsConfig::Cursor_Pos);  // Check cords & rect to handle
    
-   Button_Active = (EButton_Action)On_Button_Clicked();  // Get active button
-   
-   //Is_Button_Clicked = true;
+   for (int i = 0; i < Buttons_Vector->size(); i++)
+      Buttons_Vector->at(i)->Handler(EButton_Action::Clicker_Down);
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::LKM_Hold()
 {
-   int i = 0;
-   int button_vector_size = static_cast<int>(Buttons_Vector->size() );
-   AButton *button = 0;
-   RECT &rect = Window_Rect;
-
-   // 1.2. Move Window
    while (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
    {// If hold LMB then move window
 
@@ -234,15 +226,7 @@ void AWindow::LKM_Hold()
       MoveWindow(AsConfig::Hwnd, AsConfig::Cursor_Pos.x, AsConfig::Cursor_Pos.y, Window_Rect.right, Window_Rect.bottom, false);
    }
 
-   GetWindowRect(AsConfig::Hwnd, &rect);  // Get current window rect transform
-
-   for (i; i < button_vector_size; i++)
-   {
-      button = Buttons_Vector->at(i);
-      button->Button_Rect.left = rect.left + AsConfig::Window_Offset / 2 + button->Button_Width * i;
-      button->Button_Rect.top = rect.top + AsConfig::Window_Offset / 2;
-      button->Button_Rect.right = button->Button_Rect.left + button->Button_Width;
-      button->Button_Rect.bottom = button->Button_Rect.top + button->Button_Height;
-   }
+   for (int i = 0; i < Buttons_Vector->size(); i++)
+      Buttons_Vector->at(i)->Handler(EButton_Action::Clicker_Update_Rect);
 }
 //------------------------------------------------------------------------------------------------------------

@@ -7,7 +7,6 @@
 #include <fstream>  // Read write from files
 #include <gdiplus.h>  // Work with image
 #include <thread>  // Use Threads
-#include <array>  // !!! Delete
 #include <vector>
 
 #define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
@@ -23,7 +22,9 @@ enum class EButton_Action : byte
 {
 	Clicker_Start,
 	Clicker_Settings,
-	Clicker_Exit
+	Clicker_Exit,
+	Clicker_Down,
+	Clicker_Update_Rect
 };
 //------------------------------------------------------------------------------------------------------------
 class AsConfig

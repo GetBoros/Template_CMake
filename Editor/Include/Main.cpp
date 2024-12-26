@@ -36,8 +36,7 @@ AsEngine::~AsEngine()
 }
 //------------------------------------------------------------------------------------------------------------
 AsEngine::AsEngine()
- : Button_Active(EButton_Action::Clicker_Exit), Is_Button_Clicked(false), Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL),
-   Window(0), Cursor_Stored {}
+ : Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL), Window(0), Cursor_Stored {}
 {
    Self = this;
    Gdiplus::GdiplusStartupInput gdiplusStartupInput;   // Init GDI+
