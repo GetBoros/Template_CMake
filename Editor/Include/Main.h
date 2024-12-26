@@ -14,10 +14,9 @@ public:
 private:
 	int Tick() const;
 	void Window_Create();  // Or Add || Better create class widget
-	void On_Paint(HWND hwnd);
-	void On_LMB_Down(HWND hwnd);
+	void On_Paint();
+	void On_LMB_Down();
 	void On_Timer_Update();
-	void Draw_Active_Button(HDC hdc);
 
 	static LRESULT Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 

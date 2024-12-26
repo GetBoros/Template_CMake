@@ -98,16 +98,16 @@ void AsEngine::Window_Create()
    UpdateWindow(AsConfig::Hwnd);  // Call WM_Paint
 }
 //------------------------------------------------------------------------------------------------------------
-void AsEngine::On_Paint(HWND hwnd)
+void AsEngine::On_Paint()
 {
    Window->Handle(EWindow_State::Draw);
 }
 //------------------------------------------------------------------------------------------------------------
-void AsEngine::On_LMB_Down(HWND hwnd)
+void AsEngine::On_LMB_Down()
 {
    const int delay_ms = 150;
 
-   InvalidateRect(hwnd, 0, AsConfig::Is_Draw_At_BG);
+   InvalidateRect(AsConfig::Hwnd, 0, AsConfig::Is_Draw_At_BG);
    std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms) );  // Delay is click or hold
 
    if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )
@@ -126,25 +126,6 @@ void AsEngine::On_Timer_Update()
    }
 }
 //------------------------------------------------------------------------------------------------------------
-void AsEngine::Draw_Active_Button(HDC hdc)
-{
-   const int width = Window->Buttons_Vector->at(0)->Button_Width;
-   const int height = Window->Buttons_Vector->at(0)->Button_Height;  // while only one raw always 19
-	const int index = static_cast<int>(Button_Active);
-   HPEN pen_green = CreatePen(PS_SOLID, 1, RGB(0, 255, 0) );  // Создаем зеленую ручку для рисования линий
-   HGDIOBJ pen_prev = SelectObject(hdc, pen_green);
-   RECT rect { width * index, 0, width * (index + 1), height - 1 };
-
-   MoveToEx(hdc, rect.left, rect.top, 0);
-   LineTo(hdc, rect.right, rect.top);
-   LineTo(hdc, rect.right, rect.bottom);
-   LineTo(hdc, rect.left, rect.bottom);
-   LineTo(hdc, rect.left, rect.top);
-
-   SelectObject(hdc, pen_prev);
-   DeleteObject(pen_green);
-}
-//------------------------------------------------------------------------------------------------------------
 LRESULT AsEngine::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
    switch (message)
@@ -158,11 +139,11 @@ LRESULT AsEngine::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARA
       break;
 
    case WM_PAINT:
-      Self->On_Paint(hWnd);
+      Self->On_Paint();
       break;
 
    case WM_LBUTTONDOWN:
-      Self->On_LMB_Down(hWnd);
+      Self->On_LMB_Down();
       break;
 
    case WM_KEYDOWN:
