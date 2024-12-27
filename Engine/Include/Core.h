@@ -34,13 +34,14 @@ public:
 	static void Throw();
 	static const wchar_t *Clicker_Image_Folder();
 
-	static POINT Cursor_Pos;  // Last clicked mouse cords stored here
-	static HWND Hwnd;
 	static int Clicker_Timer;  // Delay betwen clicks
 	static int Active_Button;  // Current pressed button index
-
+	static HWND Hwnd;
+	static POINT Cursor_Pos;  // Last clicked mouse cords stored here
+	
 	static constexpr bool Is_Draw_At_BG = true;  // if true draw background || if false clear background
 	static constexpr int Window_Offset = 3 * 2;  // -||-
+	static constexpr wchar_t Window_Name[] = L"A";
 };
 //------------------------------------------------------------------------------------------------------------
 class AsExamples

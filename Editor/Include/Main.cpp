@@ -36,7 +36,7 @@ AsEngine::~AsEngine()
 }
 //------------------------------------------------------------------------------------------------------------
 AsEngine::AsEngine()
- : Cmd_Show(0), Tick_Seconds(2), Handle_Instance(0), GDI_Plus_Token(0ULL), Window(0), Cursor_Stored {}
+ : GDI_Plus_Token(0ULL), Window(0)
 {
    Self = this;
    Gdiplus::GdiplusStartupInput gdiplusStartupInput;   // Init GDI+
@@ -45,33 +45,38 @@ AsEngine::AsEngine()
 //------------------------------------------------------------------------------------------------------------
 int AsEngine::Update(HINSTANCE handle_instance, int cmd_show)
 {
-   Cmd_Show = cmd_show;
-   Handle_Instance = handle_instance;
-
+   
    WNDCLASSEXW wcex
    {
    .cbSize = sizeof(WNDCLASSEX),
    .style = CS_HREDRAW | CS_VREDRAW,
    .lpfnWndProc = Window_Procedure,
-   .hInstance = Handle_Instance,
-   .hIcon = LoadIcon(Handle_Instance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1) ),
+   .hInstance = handle_instance,
+   .hIcon = LoadIcon(handle_instance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1) ),
    .hCursor = LoadCursor(0, IDC_ARROW),
    .hbrBackground = (HBRUSH)(COLOR_WINDOW + 1),
-   .lpszClassName = L"H",
+   .lpszClassName = AsConfig::Window_Name,
    .hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL) )
    };
+  
    RegisterClassExW(&wcex);
-   Window_Create();
+   Window = new AWindow(50, 50, handle_instance);  // Starting window locations
    
-   return Tick();
+   if (!AsConfig::Hwnd != 0)
+      return 0;
+
+   ShowWindow(AsConfig::Hwnd, cmd_show);   // Or make add to view port func
+   UpdateWindow(AsConfig::Hwnd);  // Call WM_Paint
+
+   return Tick(handle_instance);
 }
 //------------------------------------------------------------------------------------------------------------
-int AsEngine::Tick() const
+int AsEngine::Tick(HINSTANCE handle_instance) const
 {
    HACCEL haccel_table = 0;
    MSG msg {};
 
-   haccel_table = LoadAccelerators(Handle_Instance, MAKEINTRESOURCE(IDC_WINDOWSPROJECT1) );
+   haccel_table = LoadAccelerators(handle_instance, MAKEINTRESOURCE(IDC_WINDOWSPROJECT1) );
    while (GetMessage(&msg, 0, 0, 0) )  // Main message loop:
    {
       if (!TranslateAccelerator(msg.hwnd, haccel_table, &msg) )
@@ -81,20 +86,6 @@ int AsEngine::Tick() const
       }
    }
    return (int)msg.wParam;
-}
-//------------------------------------------------------------------------------------------------------------
-void AsEngine::Window_Create()
-{
-   Window = new AWindow(50, 50);  // Starting window locations
-
-   AsConfig::Hwnd = CreateWindowExW( /*WS_EX_LAYERED | */WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE,  // WS_EX_DLGMODALFRAME offsets
-      L"H", L"H", WS_POPUP, Window->Window_Rect.left, Window->Window_Rect.top, Window->Window_Rect.right, Window->Window_Rect.bottom, 0, 0, Handle_Instance, 0);
-
-   if (!AsConfig::Hwnd != 0)
-      return;
-
-   ShowWindow(AsConfig::Hwnd, Cmd_Show);   // Or make add to view port func
-   UpdateWindow(AsConfig::Hwnd);  // Call WM_Paint
 }
 //------------------------------------------------------------------------------------------------------------
 void AsEngine::On_Paint()
@@ -120,7 +111,7 @@ void AsEngine::On_Timer_Update()
    int is_pressed = 0x8000;
    if (GetAsyncKeyState(VK_CONTROL) & is_pressed)
    {
-      GetCursorPos(&Cursor_Stored);
+      GetCursorPos(&AsConfig::Cursor_Pos);
       KillTimer(AsConfig::Hwnd, 1);
    }
 }
@@ -149,8 +140,6 @@ LRESULT AsEngine::Window_Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARA
       break;
 
    case WM_MOUSEWHEEL:
-      Self->Tick_Seconds = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? ++Self->Tick_Seconds : --Self->Tick_Seconds;  // !!! Bad example
-      InvalidateRect(hWnd, 0, AsConfig::Is_Draw_At_BG);
       break;
 
    case WM_DESTROY:

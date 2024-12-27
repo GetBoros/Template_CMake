@@ -59,7 +59,7 @@ class AWindow
 {
 public:
 	~AWindow();
-	AWindow(const int x_cord, const int y_cord);  // Window start Location
+	AWindow(const int x_cord, const int y_cord, HINSTANCE handle_instance);  // Window start Location
 
 	void Init();  // For now just create Clicker app
 	void Handle(const EWindow_State window_state);  // Handle window state

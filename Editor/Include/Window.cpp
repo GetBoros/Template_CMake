@@ -16,8 +16,8 @@ AsClicker::AsClicker()
 //------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
 {
-   const SCoordinate button_update_cord { 1262, 708 };  // Update
-   const SCoordinate button_accept_cord { 1106, 706 };  // Accept
+   const SCoordinate button_update_cord { 1262, 773 };  // Update
+   const SCoordinate button_accept_cord { 1091, 773 };  // Accept
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
       SetCursorPos(cords.x, cords.y);  // After each set cursor need return to prev position
@@ -113,21 +113,28 @@ AWindow::~AWindow()
 	delete Buttons_Vector;
 }
 //------------------------------------------------------------------------------------------------------------
-AWindow::AWindow(const int x_cord, const int y_cord)
+AWindow::AWindow(const int x_cord, const int y_cord, HINSTANCE handle_instance)
  : Window_Rect{ x_cord, y_cord, AsConfig::Window_Offset + 1, AsConfig::Window_Offset + 1 }, Buttons_Vector(0),
    Hdc(0)
 {
+   const int button_width = 27;
+   const int button_height = 20;
+   const wchar_t *w_name = AsConfig::Window_Name;
+
 	Buttons_Vector = new std::vector<AButton *>();
 	Buttons_Vector->reserve(3);
   
    for (int i = 0; i <= (int)EButton_Action::Clicker_Exit; i++)  // Create custom buttons and resize AWindow
    {// Create buttons needed for clicker
 
-      Buttons_Vector->push_back(new AButton(27, 20, (EButton_Action)i, Window_Rect) );
-      Window_Rect.right += 27;
-      if (Window_Rect.bottom < 20)
-         Window_Rect.bottom = 20 + AsConfig::Window_Offset + 1;
+      Buttons_Vector->push_back(new AButton(button_width, button_height, (EButton_Action)i, Window_Rect) );
+      Window_Rect.right += button_width;
+      if (Window_Rect.bottom < button_height)
+         Window_Rect.bottom = button_height + AsConfig::Window_Offset + 1;
    }
+
+   AsConfig::Hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_ACCEPTFILES | WS_EX_NOACTIVATE, w_name, w_name,
+      WS_POPUP, Window_Rect.left, Window_Rect.top, Window_Rect.right, Window_Rect.bottom, 0, 0, handle_instance, 0);
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Init()
