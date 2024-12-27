@@ -45,7 +45,6 @@ AsEngine::AsEngine()
 //------------------------------------------------------------------------------------------------------------
 int AsEngine::Update(HINSTANCE handle_instance, int cmd_show)
 {
-   
    WNDCLASSEXW wcex
    {
    .cbSize = sizeof(WNDCLASSEX),

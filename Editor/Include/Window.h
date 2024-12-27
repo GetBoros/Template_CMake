@@ -2,6 +2,16 @@
 #include "Core.h"
 
 //------------------------------------------------------------------------------------------------------------
+enum class EImage_Button : byte
+{
+	Play,
+	Settings,
+	Write,
+	Return,
+	Exit,
+	Last
+};
+//------------------------------------------------------------------------------------------------------------
 enum class EWindow_State : byte
 {
 	None,
@@ -68,7 +78,7 @@ public:
 
 private:
 	void Draw_Frame();
-	void Draw_Image() const;
+	void Draw_Image() const;  // !!! Refactor || too many uselles(repeatable actions) make Frame_DC class someday
 	void Draw_Active();  // !!! Or must be in button?
 	void LKM_Down();
 	void LKM_Hold();

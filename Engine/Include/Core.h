@@ -34,6 +34,7 @@ public:
 	static void Throw();
 	static const wchar_t *Clicker_Image_Folder();
 
+	static EButton_Action Button_Active;
 	static int Clicker_Timer;  // Delay betwen clicks
 	static int Active_Button;  // Current pressed button index
 	static HWND Hwnd;

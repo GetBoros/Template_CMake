@@ -67,7 +67,8 @@ void AButton::Handler(const EButton_Action button_action) const
       AsClicker().Is_Running(AsConfig::Clicker_Timer, Anime_Stars_Cord);
       break;
    case EButton_Action::Clicker_Settings:
-      SetTimer(AsConfig::Hwnd, 1, 100, 0);  // ID(1), ms(100)
+      AsConfig::Button_Active = EButton_Action::Clicker_Settings;
+      //SetTimer(AsConfig::Hwnd, 1, 100, 0);  // ID(1), ms(100)
       break;
    case EButton_Action::Clicker_Exit:
       PostQuitMessage(0);
@@ -169,29 +170,51 @@ void AWindow::Draw_Frame()
    PAINTSTRUCT ps{};
    Hdc = BeginPaint(AsConfig::Hwnd, &ps);
 
+   // Draw Buttons 0, 1, 4
    Draw_Image();
 
    EndPaint(AsConfig::Hwnd, &ps);
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Draw_Image() const
-{
-   const int button_exit = 108;
+{// graphics.DrawImage(gdi_image, 0, 0);  // Draw full image in folder
+
 	const int button_width = 27;
-	const int button_height = 20;
-	const int button_third = 54;
-   Gdiplus::Image *gdi_image;
-   Gdiplus::Graphics graphics(Hdc);
-   
+   int width = 0;
+   int height = 0;
+   int i = 0;
+   int *image_arrays_cords = 0;
+   int *image_array_patern = 0;
+   int menu_starting[]{ (int)EImage_Button::Play, (int)EImage_Button::Settings, (int)EImage_Button::Exit };
+   int menu_settings[]{ (int)EImage_Button::Play, (int)EImage_Button::Write, (int)EImage_Button::Return };
+   Gdiplus::Image *gdi_image = 0;
+   Gdiplus::Graphics gdi_graphics(Hdc);
+
+   if (AsConfig::Button_Active != EButton_Action::Clicker_Settings)
+      image_array_patern = menu_starting;
+   else
+      image_array_patern = menu_settings;
+
    gdi_image = new Gdiplus::Image(AsConfig::Clicker_Image_Folder() );
    if (gdi_image->GetLastStatus() == Gdiplus::Ok)
    {
-      graphics.DrawImage(gdi_image, 0, 0);
-      
-      Gdiplus::Rect source_rect(button_exit, 0, button_width + 1, button_height);
-      Gdiplus::Rect destin_rect(button_third, 0, button_width + 1, button_height);
+      width = gdi_image->GetWidth();
+      height = gdi_image->GetHeight();
+      int image_button_count = width / button_width;
+      image_arrays_cords = new int[image_button_count] {};
+      const int window_button_count = Window_Rect.right / 27;
 
-      graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
+      for (i = 0; i < image_button_count; i++)
+         image_arrays_cords[i] = button_width * i;
+
+      for (i = 0; i < window_button_count; i++)
+      {
+         Gdiplus::Rect source_rect(image_arrays_cords[image_array_patern[i] ], 0, button_width + 1, height);  // from to put
+         Gdiplus::Rect destin_rect(image_arrays_cords[i], 0, button_width + 1, height);  // where to put
+
+         gdi_graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
+      }
+
    }
    delete gdi_image;
 }

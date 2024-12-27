@@ -59,6 +59,7 @@ AsTools::AsTools()
 
 
 // AsConfig
+EButton_Action AsConfig::Button_Active = EButton_Action::Clicker_Exit;
 int AsConfig::Active_Button = 0;
 int AsConfig::Clicker_Timer = 4;
 HWND AsConfig::Hwnd = 0;
@@ -75,6 +76,6 @@ void AsConfig::Throw()
 //------------------------------------------------------------------------------------------------------------
 const wchar_t *AsConfig::Clicker_Image_Folder()
 {
-   return L"Pictures/Main_Image.png";
+   return L"Pictures/Clicker_Image.png";
 }
 //------------------------------------------------------------------------------------------------------------
