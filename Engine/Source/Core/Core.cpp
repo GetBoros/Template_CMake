@@ -61,7 +61,7 @@ AsTools::AsTools()
 // AsConfig
 EButton_Action AsConfig::Button_Active = EButton_Action::Clicker_Exit;
 int AsConfig::Active_Button = 0;
-int AsConfig::Clicker_Timer = 4;
+int AsConfig::Clicker_Timer = 3;
 HWND AsConfig::Hwnd = 0;
 POINT AsConfig::Cursor_Pos = {};
 //------------------------------------------------------------------------------------------------------------

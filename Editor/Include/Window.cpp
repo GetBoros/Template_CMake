@@ -28,8 +28,9 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    while (true)
    {
 		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(button_update_cord, Inputs_Mouses, 2, (1) * 1000);  // Pressed at cord
-      perform_action(button_accept_cord, Inputs_Mouses, 2, (timer) * 1000);  // Pressed at cord
+      perform_action(button_update_cord, Inputs_Mouses, 2, 100);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, 100);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, (timer) * 1000);
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
@@ -160,6 +161,9 @@ void AWindow::Handle(const EWindow_State window_state)
       break;
    case EWindow_State::Exit:
       break;
+   case EWindow_State::Load_Resources:
+      Load_Resources();
+      break;
    default:
       break;
    }
@@ -190,31 +194,30 @@ void AWindow::Draw_Image() const
    Gdiplus::Image *gdi_image = 0;
    Gdiplus::Graphics gdi_graphics(Hdc);
 
-   if (AsConfig::Button_Active != EButton_Action::Clicker_Settings)
+   if (AsConfig::Button_Active != EButton_Action::Clicker_Settings)  // If click at button setting change draw pattern
       image_array_patern = menu_starting;
    else
       image_array_patern = menu_settings;
 
-   gdi_image = new Gdiplus::Image(AsConfig::Clicker_Image_Folder() );
+   gdi_image = new Gdiplus::Image(AsConfig::Clicker_Image_Folder() );  // Load Image from folder
    if (gdi_image->GetLastStatus() == Gdiplus::Ok)
    {
       width = gdi_image->GetWidth();
       height = gdi_image->GetHeight();
       int image_button_count = width / button_width;
       image_arrays_cords = new int[image_button_count] {};
-      const int window_button_count = Window_Rect.right / 27;
+      const int window_button_count = Window_Rect.right / button_width;
 
       for (i = 0; i < image_button_count; i++)
-         image_arrays_cords[i] = button_width * i;
+         image_arrays_cords[i] = button_width * i;  // Set each button cord | location
 
       for (i = 0; i < window_button_count; i++)
       {
-         Gdiplus::Rect source_rect(image_arrays_cords[image_array_patern[i] ], 0, button_width + 1, height);  // from to put
-         Gdiplus::Rect destin_rect(image_arrays_cords[i], 0, button_width + 1, height);  // where to put
+         Gdiplus::Rect source_rect(image_arrays_cords[image_array_patern[i] ], 0, button_width + 1, height);  // from this rect
+         Gdiplus::Rect destin_rect(image_arrays_cords[i], 0, button_width + 1, height);  // to this rect
 
          gdi_graphics.DrawImage(gdi_image, destin_rect, source_rect.X, source_rect.Y, source_rect.Width, source_rect.Height, Gdiplus::UnitPixel);
       }
-
    }
    delete gdi_image;
 }
@@ -258,5 +261,10 @@ void AWindow::LKM_Hold()
 
    for (int i = 0; i < Buttons_Vector->size(); i++)
       Buttons_Vector->at(i)->Handler(EButton_Action::Clicker_Update_Rect);
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Load_Resources()
+{
+
 }
 //------------------------------------------------------------------------------------------------------------

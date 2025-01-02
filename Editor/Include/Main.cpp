@@ -60,6 +60,7 @@ int AsEngine::Update(HINSTANCE handle_instance, int cmd_show)
   
    RegisterClassExW(&wcex);
    Window = new AWindow(50, 50, handle_instance);  // Starting window locations
+   Window->Handle(EWindow_State::Load_Resources);
    
    if (!AsConfig::Hwnd != 0)
       return 0;

@@ -18,7 +18,8 @@ enum class EWindow_State : byte
 	Draw,
 	Down,
 	Hold,
-	Exit
+	Exit,
+	Load_Resources
 };
 //------------------------------------------------------------------------------------------------------------
 struct SCoordinate
@@ -82,6 +83,7 @@ private:
 	void Draw_Active();  // !!! Or must be in button?
 	void LKM_Down();
 	void LKM_Hold();
+	void Load_Resources();
 
 	HDC Hdc;
 	std::vector<AButton *> *Buttons_Vector;
