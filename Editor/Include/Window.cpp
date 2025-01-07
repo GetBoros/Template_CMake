@@ -16,6 +16,7 @@ AsClicker::AsClicker()
 //------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
 {
+   const int ms_ = (timer * 1000) - (150 * 4);
    const SCoordinate button_update_cord { 1262, 773 };  // Update
    const SCoordinate button_accept_cord { 1091, 773 };  // Accept
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
@@ -28,9 +29,11 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    while (true)
    {
 		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(button_update_cord, Inputs_Mouses, 2, 100);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, 100);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, (timer) * 1000);
+      perform_action(button_update_cord, Inputs_Mouses, 2, 150);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, ms_);
 
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
@@ -154,7 +157,8 @@ void AWindow::Handle(const EWindow_State window_state)
       Draw_Frame();
       break;
    case EWindow_State::Down:
-      LKM_Down();
+      Capture_Screen_Rect(300, 300, 600, 600, L"screenshot.png");
+      //LKM_Down();
       break;
    case EWindow_State::Hold:
       LKM_Hold();
@@ -266,5 +270,52 @@ void AWindow::LKM_Hold()
 void AWindow::Load_Resources()
 {
 
+}
+//------------------------------------------------------------------------------------------------------------
+void AWindow::Capture_Screen_Rect(int x, int y, int width, int height, const std::wstring &filename)
+{
+   HDC hScreenDC;
+   HDC hMemoryDC;
+   HBITMAP hBitmap;
+   CLSID pngClsid;
+
+   hScreenDC = GetDC(0);
+   hMemoryDC = CreateCompatibleDC(hScreenDC);
+   hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);  // Создаём совместимую битовую карту
+   SelectObject(hMemoryDC, hBitmap);
+   
+   BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, x, y, SRCCOPY);  // Копируем содержимое экрана
+   Gdiplus::Bitmap bitmap(hBitmap, 0);  // Сохраняем изображение в файл
+   pngClsid = GetEncoderClsid(L"image/png");
+   bitmap.Save(filename.c_str(), &pngClsid, 0);
+
+   // Очистка ресурсов
+   DeleteObject(hBitmap);
+   DeleteDC(hMemoryDC);
+   ReleaseDC(nullptr, hScreenDC);
+}
+//------------------------------------------------------------------------------------------------------------
+CLSID AWindow::GetEncoderClsid(const WCHAR* format)
+{
+   UINT numEncoders = 0;
+   UINT size = 0;
+   std::unique_ptr<BYTE[], std::default_delete<BYTE[]>> buffer = 0;
+   Gdiplus::ImageCodecInfo *encoders = 0;
+   Gdiplus::GetImageEncodersSize(&numEncoders, &size);
+   
+   if (size == 0)
+      return CLSID();
+
+   buffer = std::make_unique<BYTE[]>(size);
+   encoders = reinterpret_cast<Gdiplus::ImageCodecInfo *>(buffer.get() );
+   Gdiplus::GetImageEncoders(numEncoders, size, encoders);
+
+   for (UINT i = 0; i < numEncoders; ++i)
+   {
+      if (wcscmp(encoders[i].MimeType, format) == 0)
+         return encoders[i].Clsid;
+   }
+
+   return CLSID();
 }
 //------------------------------------------------------------------------------------------------------------

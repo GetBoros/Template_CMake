@@ -84,6 +84,8 @@ private:
 	void LKM_Down();
 	void LKM_Hold();
 	void Load_Resources();
+	void Capture_Screen_Rect(int x, int y, int width, int height, const std::wstring &filename);
+	CLSID GetEncoderClsid(const WCHAR *format);
 
 	HDC Hdc;
 	std::vector<AButton *> *Buttons_Vector;
