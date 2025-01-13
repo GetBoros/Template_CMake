@@ -14,27 +14,92 @@ AsClicker::AsClicker()
    std::this_thread::sleep_for(std::chrono::seconds(Timer_Prep) );  // Time to prepere windows
 }
 //------------------------------------------------------------------------------------------------------------
+void AsClicker::MoveCursorSmoothly(int startX, int startY, int endX, int endY, int steps) {
+   for (int i = 0; i <= steps; ++i) {
+      int x = startX + (endX - startX) * i / steps;
+      int y = startY + (endY - startY) * i / steps;
+      SetCursorPos(x, y);
+      std::this_thread::sleep_for(std::chrono::milliseconds(5) );  // Задержка для плавности
+   }
+}
+//------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
 {
-   const int ms_ = (timer * 1000) - (150 * 4);
+   constexpr int delay_ms = 150;  // give site time to response 150 ms or less?
+   constexpr int ms_at_sec = 1000;  // how many ms in one second
+   constexpr int delay_arg = 4;  // how many else arg we have
+   constexpr int delay_ccl = 3;  // how much wait per cycle in while loop
+   constexpr int delay_ms_rest = (delay_ccl * ms_at_sec) - (delay_ms * delay_arg);
    const SCoordinate button_update_cord { 1262, 773 };  // Update
    const SCoordinate button_accept_cord { 1091, 773 };  // Accept
+   const SCoordinate button_gamesa_cord { 480, 648 };  // Accept
+   const SCoordinate button_fscren_cord { 1415, 875 };  // AStar fullscreen button cords while in full open
+   const SCoordinate button_fscrrv_cord { 1285, 705 };  // AStar fullscreen button cords opens in full screen
+   const SCoordinate button_cardsr_cord { 1339, 665 };  // AStar cards rect location
+   INPUT inputMouseHold = { INPUT_MOUSE, {.mi = { 0, 0, 0, MOUSEEVENTF_LEFTDOWN, 0, 0 } } };
+   INPUT inputMouseRelease = { INPUT_MOUSE, {.mi = { 0, 0, 0, MOUSEEVENTF_LEFTUP, 0, 0 } } };
+   //perform_action(SCoordinate(120, 20), Inputs_Mouses, 2, delay_ms);  // First page cords
+
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
-      SetCursorPos(cords.x, cords.y);  // After each set cursor need return to prev position
+      SetCursorPos(cords.x, cords.y);  // Move cursor to cord location
       SendInput(static_cast<UINT>(input_count), input_type, sizeof(INPUT) );
       std::this_thread::sleep_for(std::chrono::milliseconds(timer_ms) );
    };
 
+   // Cards capture
    while (true)
    {
-		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(button_update_cord, Inputs_Mouses, 2, 150);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, 150);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, ms_);
+      perform_action(button_fscren_cord, Inputs_Mouses, 2, delay_ms);  // From fullscreen
+      perform_action(button_cardsr_cord, Inputs_Mouses, 2, delay_ms);  // Press on cards
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);  // Press on fullscreen
+      SetCursorPos(button_fscren_cord.x, button_fscren_cord.y);  // After each set cursor need return to prev position
+   
+      std::this_thread::sleep_for(std::chrono::seconds(331) );  // 5 min + 30 sec
+   }
 
+   // HOLD LKM while write CTRL
+   /*
+   while (true)
+   {
+      if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+         SendInput(1, &inputMouseHold, sizeof(INPUT) );
+   
+      if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+      {
+         SendInput(1, &inputMouseRelease, sizeof(INPUT) );
+         return 0;
+      }
+   
+      if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+         SendInput(2, Inputs_Mouses, sizeof(INPUT) );
+   
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000) );  // Задержка для плавности
+   }
+   */
+
+   // Drag file
+   /*
+   SetCursorPos(621, 230);  // After each set cursor need return to prev position
+   Sleep(delay_ms);
+   SendInput(1, &inputMouseHold, sizeof(INPUT) );
+   
+   MoveCursorSmoothly(621, 230, 621, 500, 7);
+   
+   Sleep(200);
+   SetCursorPos(621, 500);  // After each set cursor need return to prev position
+   SendInput(1, &inputMouseRelease, sizeof(INPUT));
+   
+   return 0;
+   */
+   
+   // In Game buy items
+   /*
+   while (true)
+   {
+      perform_action(button_gamesa_cord, Inputs_Mouses, 2, delay_ms);  // 518 648
+      perform_action(button_gamesa_cord, Inputs_Mouses, 2, delay_ms);  // 518 648
+      
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
          return 0;
       if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000) && (GetAsyncKeyState('R') & 0x8000) )
@@ -43,6 +108,24 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
          return 0;
       }
    }
+   */
+
+   // Site sacrifice cards
+   while (true)  // 3 sec
+   {
+		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
+      perform_action(button_update_cord, Inputs_Mouses, 2, delay_ms);  // Update page
+      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);  // Click to sacrifice card and wait delay_msms
+      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);  
+      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);
+      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms_rest);  // 2sec 400ms
+
+      if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
+         return 0;
+      if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000) && (GetAsyncKeyState('R') & 0x8000) )
+         return 0;  // just example ctrl + shift + r execute those
+   }
+   return 0;
 }
 //------------------------------------------------------------------------------------------------------------
 
@@ -66,7 +149,8 @@ AButton::AButton(const int x_cord, const int y_cord, const EButton_Action button
 void AButton::Handler(const EButton_Action button_action) const
 {
    switch (button_action)
-   {
+   {// rework
+
    case EButton_Action::Clicker_Start:
       AsClicker().Is_Running(AsConfig::Clicker_Timer, Anime_Stars_Cord);
       break;
@@ -157,8 +241,8 @@ void AWindow::Handle(const EWindow_State window_state)
       Draw_Frame();
       break;
    case EWindow_State::Down:
-      Capture_Screen_Rect(300, 300, 600, 600, L"screenshot.png");
-      //LKM_Down();
+      //Capture_Screen_Rect(300, 300, 600, 600, L"screenshot.png");
+      LKM_Down();
       break;
    case EWindow_State::Hold:
       LKM_Hold();
@@ -273,23 +357,28 @@ void AWindow::Load_Resources()
 }
 //------------------------------------------------------------------------------------------------------------
 void AWindow::Capture_Screen_Rect(int x, int y, int width, int height, const std::wstring &filename)
-{
-   HDC hScreenDC;
-   HDC hMemoryDC;
-   HBITMAP hBitmap;
-   CLSID pngClsid;
+{// HBITMAP -> Gdiplus::Bitmap -> Save to file
 
-   hScreenDC = GetDC(0);
-   hMemoryDC = CreateCompatibleDC(hScreenDC);
-   hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);  // Создаём совместимую битовую карту
-   SelectObject(hMemoryDC, hBitmap);
+   HDC hScreenDC = 0;  // work with screen
+   HDC hMemoryDC = 0;  // work with images in memory
+   HBITMAP hBitmap = 0;  // need to cpy image from screen, it`s like API?
+   CLSID pngClsid { };
+
+   // 1.0. Init data
+   hScreenDC = GetDC(0);  // monitor descriptor
+   hMemoryDC = CreateCompatibleDC(hScreenDC);  // context to work with image in allocated memory
+   hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);  // create arr ** to empty bytes after save data here
    
-   BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, x, y, SRCCOPY);  // Копируем содержимое экрана
-   Gdiplus::Bitmap bitmap(hBitmap, 0);  // Сохраняем изображение в файл
-   pngClsid = GetEncoderClsid(L"image/png");
-   bitmap.Save(filename.c_str(), &pngClsid, 0);
+   // 1.1. Save image to hBitmap | cpy pxls hScreenDC -> hMemoryDC -> hBitmap (if SelectObject)
+   SelectObject(hMemoryDC, hBitmap);  // say hMemoryDC to draw in hBitmap || BitBlt now draw in hBitmap
+   BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, x, y, SRCCOPY);  // cpy from screen_dc to memory_dc
+   
+   // 1.2. Encode to png and save to filename folder
+   Gdiplus::Bitmap bitmap(hBitmap, 0);  // expose hBitmap to highlevel, easy work with
+   pngClsid = GetEncoderClsid(L"image/png");  // change image format?
+   bitmap.Save(filename.c_str(), &pngClsid, 0);  // Save to curr format png to file in file name
 
-   // Очистка ресурсов
+   // 1.3. Free memory
    DeleteObject(hBitmap);
    DeleteDC(hMemoryDC);
    ReleaseDC(nullptr, hScreenDC);
@@ -297,22 +386,23 @@ void AWindow::Capture_Screen_Rect(int x, int y, int width, int height, const std
 //------------------------------------------------------------------------------------------------------------
 CLSID AWindow::GetEncoderClsid(const WCHAR* format)
 {
-   UINT numEncoders = 0;
-   UINT size = 0;
+   UINT i = 0;
+   UINT encoder_size = 0;
+   UINT encoder_count = 0;
    std::unique_ptr<BYTE[], std::default_delete<BYTE[]>> buffer = 0;
    Gdiplus::ImageCodecInfo *encoders = 0;
-   Gdiplus::GetImageEncodersSize(&numEncoders, &size);
-   
-   if (size == 0)
+
+   Gdiplus::GetImageEncodersSize(&encoder_count, &encoder_size);  // codec count can use and buffer size to store them
+   if (encoder_size == 0)
       return CLSID();
 
-   buffer = std::make_unique<BYTE[]>(size);
+   buffer = std::make_unique<BYTE[]>(encoder_size);
    encoders = reinterpret_cast<Gdiplus::ImageCodecInfo *>(buffer.get() );
-   Gdiplus::GetImageEncoders(numEncoders, size, encoders);
+   Gdiplus::GetImageEncoders(encoder_count, encoder_size, encoders);  // get info about all codec we have
 
-   for (UINT i = 0; i < numEncoders; ++i)
+   for (i = 0; i < encoder_count; ++i)
    {
-      if (wcscmp(encoders[i].MimeType, format) == 0)
+      if (wcscmp(encoders[i].MimeType, format) == 0)  // if MimeType == image/png compare and execute
          return encoders[i].Clsid;
    }
 

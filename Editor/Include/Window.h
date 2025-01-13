@@ -35,12 +35,13 @@ public:
 	~AsClicker();
 	AsClicker();
 
+	void MoveCursorSmoothly(int startX, int startY, int endX, int endY, int steps);
 	int Is_Running(const int &timer, const SCoordinate &test);
 
 private:
 	int Timer_Prep;
 	POINT Cursor_Prev_Cords;
-	INPUT Inputs_Mouses[2];
+	INPUT Inputs_Mouses[2];  // Click
 	INPUT Inputs_Keyboard[2];
 };
 //------------------------------------------------------------------------------------------------------------
