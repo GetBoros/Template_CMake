@@ -36,7 +36,7 @@ public:
 	AsClicker();
 
 	void MoveCursorSmoothly(int startX, int startY, int endX, int endY, int steps);
-	int Is_Running(const int &timer, const SCoordinate &test);
+	int Is_Running(const int timer, const SCoordinate &test);
 
 private:
 	int Timer_Prep;

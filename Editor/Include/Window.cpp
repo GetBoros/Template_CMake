@@ -23,7 +23,7 @@ void AsClicker::MoveCursorSmoothly(int startX, int startY, int endX, int endY, i
    }
 }
 //------------------------------------------------------------------------------------------------------------
-int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
+int AsClicker::Is_Running(const int timer, const SCoordinate &test)
 {
    constexpr int delay_ms = 150;  // give site time to response 150 ms or less?
    constexpr int ms_at_sec = 1000;  // how many ms in one second
@@ -34,11 +34,14 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    const SCoordinate button_accept_cord { 1091, 773 };  // Accept
    const SCoordinate button_gamesa_cord { 480, 648 };  // Accept
    const SCoordinate button_fscren_cord { 1415, 875 };  // AStar fullscreen button cords while in full open
-   const SCoordinate button_fscrrv_cord { 1285, 705 };  // AStar fullscreen button cords opens in full screen
-   const SCoordinate button_cardsr_cord { 1339, 665 };  // AStar cards rect location
+   const SCoordinate button_fscrrv_cord { 1050, 500 };  // AStar fullscreen button cords opens in full screen
+   const SCoordinate button_cardsr_cord { 1339, 665 };  // last byte 1406, 767  || Size 70 | 135
    INPUT inputMouseHold = { INPUT_MOUSE, {.mi = { 0, 0, 0, MOUSEEVENTF_LEFTDOWN, 0, 0 } } };
    INPUT inputMouseRelease = { INPUT_MOUSE, {.mi = { 0, 0, 0, MOUSEEVENTF_LEFTUP, 0, 0 } } };
-   //perform_action(SCoordinate(120, 20), Inputs_Mouses, 2, delay_ms);  // First page cords
+   SCoordinate card_offset_cord = button_cardsr_cord;
+
+   std::chrono::steady_clock::time_point time_now {};
+   std::chrono::steady_clock::time_point time_start= std::chrono::steady_clock::now();
 
 	auto perform_action = [](const SCoordinate &cords, INPUT *input_type, size_t input_count, int timer_ms)
    {
@@ -47,16 +50,54 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
       std::this_thread::sleep_for(std::chrono::milliseconds(timer_ms) );
    };
 
+   auto key_combination = [](const int modifer, const int key)
+      {
+         return (GetAsyncKeyState(modifer) & 0x8000) && (GetAsyncKeyState(key) & 0x8000);
+      };
+
+   //perform_action(SCoordinate(120, 20), Inputs_Mouses, 2, delay_ms);  // First page cords
+   //perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
+
    // Cards capture
+   /*
    while (true)
    {
-      perform_action(button_fscren_cord, Inputs_Mouses, 2, delay_ms);  // From fullscreen
-      perform_action(button_cardsr_cord, Inputs_Mouses, 2, delay_ms);  // Press on cards
-      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);  // Press on fullscreen
-      SetCursorPos(button_fscren_cord.x, button_fscren_cord.y);  // After each set cursor need return to prev position
-   
-      std::this_thread::sleep_for(std::chrono::seconds(331) );  // 5 min + 30 sec
+      // Double click
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+
+      // Click on card
+      perform_action(SCoordinate(1343, 769), Inputs_Mouses, 2, delay_ms);  // Press on cards
+      
+      // Double click
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+
+      if (card_offset_cord.y == 1409)
+      {
+         card_offset_cord.y = button_cardsr_cord.x;
+         card_offset_cord.x += 1;
+      }
+
+      //card_offset_cord.y += 1;
+      std::this_thread::sleep_for(std::chrono::seconds(330 / 5) );  // 5 min + 30 sec
    }
+   */
+
+   //Clicker simulator
+   /*
+   while (true)
+   {
+      SendInput(2, Inputs_Mouses, sizeof(INPUT) );
+      std::this_thread::sleep_for(std::chrono::milliseconds(150) );
+
+      if (GetAsyncKeyState('Z') & 0x8000)
+      {
+         SendInput(1, &inputMouseHold, sizeof(INPUT) );
+         return 0;
+      }
+   }
+   */
 
    // HOLD LKM while write CTRL
    /*
@@ -113,18 +154,20 @@ int AsClicker::Is_Running(const int &timer, const SCoordinate &test)
    // Site sacrifice cards
    while (true)  // 3 sec
    {
-		//perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-      perform_action(button_update_cord, Inputs_Mouses, 2, delay_ms);  // Update page
-      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);  // Click to sacrifice card and wait delay_msms
-      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);  
-      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);
-      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms_rest);  // 2sec 400ms
+      perform_action(button_accept_cord, Inputs_Mouses, 2, delay_ms);  // Click to sacrifice card and wait delay_ms
+      time_now = std::chrono::steady_clock::now();  // get current time
 
-      if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('Q') & 0x8000) )
-         return 0;
-      if ( (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000) && (GetAsyncKeyState('R') & 0x8000) )
-         return 0;  // just example ctrl + shift + r execute those
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(time_now - time_start).count() >= delay_ms_rest)
+      {// if from start time point 3 seconds past do the scope
+
+         perform_action(button_update_cord, Inputs_Mouses, 2, delay_ms);  // Click to update button page
+         if (key_combination(VK_CONTROL, 'Q') )  // every 3 sec check if pressed end cycle
+            return 0;
+
+         time_start = std::chrono::steady_clock::now();  // update time_start to current time
+      }
    }
+
    return 0;
 }
 //------------------------------------------------------------------------------------------------------------
