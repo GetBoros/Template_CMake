@@ -25,7 +25,7 @@ void AsClicker::MoveCursorSmoothly(int startX, int startY, int endX, int endY, i
 //------------------------------------------------------------------------------------------------------------
 int AsClicker::Is_Running(const int timer, const SCoordinate &test)
 {
-   constexpr int delay_ms = 150;  // give site time to response 150 ms or less?
+   constexpr int delay_ms = 75;  // give site time to response 150 ms or less?
    constexpr int ms_at_sec = 1000;  // how many ms in one second
    constexpr int delay_arg = 4;  // how many else arg we have
    constexpr int delay_ccl = 3;  // how much wait per cycle in while loop
@@ -57,32 +57,6 @@ int AsClicker::Is_Running(const int timer, const SCoordinate &test)
 
    //perform_action(SCoordinate(120, 20), Inputs_Mouses, 2, delay_ms);  // First page cords
    //perform_action(test, Inputs_Keyboard, 2, 200);  // F5 then after 200 ms go to next action
-
-   // Cards capture
-   /*
-   while (true)
-   {
-      // Double click
-      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
-      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
-
-      // Click on card
-      perform_action(SCoordinate(1343, 769), Inputs_Mouses, 2, delay_ms);  // Press on cards
-      
-      // Double click
-      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
-      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
-
-      if (card_offset_cord.y == 1409)
-      {
-         card_offset_cord.y = button_cardsr_cord.x;
-         card_offset_cord.x += 1;
-      }
-
-      //card_offset_cord.y += 1;
-      std::this_thread::sleep_for(std::chrono::seconds(330 / 5) );  // 5 min + 30 sec
-   }
-   */
 
    //Clicker simulator
    /*
@@ -151,6 +125,31 @@ int AsClicker::Is_Running(const int timer, const SCoordinate &test)
    }
    */
 
+   // Cards capture
+   /*
+   while (true)
+   {
+      // Double click
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+
+      // Click on card
+      perform_action(SCoordinate(1343, 769), Inputs_Mouses, 2, delay_ms);  // Press on cards
+      
+      // Double click
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+      perform_action(button_fscrrv_cord, Inputs_Mouses, 2, delay_ms);
+
+      if (card_offset_cord.y == 1409)
+      {
+         card_offset_cord.y = button_cardsr_cord.x;
+         card_offset_cord.x += 1;
+      }
+
+      //card_offset_cord.y += 1;
+      std::this_thread::sleep_for(std::chrono::seconds(330 / 5) );  // 5 min + 30 sec
+   }
+   */
    // Site sacrifice cards
    while (true)  // 3 sec
    {
@@ -314,34 +313,39 @@ void AWindow::Draw_Frame()
 void AWindow::Draw_Image() const
 {// graphics.DrawImage(gdi_image, 0, 0);  // Draw full image in folder
 
-	const int button_width = 27;
    int width = 0;
    int height = 0;
    int i = 0;
    int *image_arrays_cords = 0;
    int *image_array_patern = 0;
+   int image_button_count = 0;
    int menu_starting[]{ (int)EImage_Button::Play, (int)EImage_Button::Settings, (int)EImage_Button::Exit };
    int menu_settings[]{ (int)EImage_Button::Play, (int)EImage_Button::Write, (int)EImage_Button::Return };
+	const int button_width = 27;
+   const int window_button_count = Window_Rect.right / button_width;
    Gdiplus::Image *gdi_image = 0;
    Gdiplus::Graphics gdi_graphics(Hdc);
 
+   // 1.0. Pattern case to what images to draw
    if (AsConfig::Button_Active != EButton_Action::Clicker_Settings)  // If click at button setting change draw pattern
       image_array_patern = menu_starting;
    else
       image_array_patern = menu_settings;
 
+   // 2.0. Draw images as background
    gdi_image = new Gdiplus::Image(AsConfig::Clicker_Image_Folder() );  // Load Image from folder
    if (gdi_image->GetLastStatus() == Gdiplus::Ok)
    {
+      // 2.1. Initialize images rects, cords and save to array
       width = gdi_image->GetWidth();
       height = gdi_image->GetHeight();
-      int image_button_count = width / button_width;
-      image_arrays_cords = new int[image_button_count] {};
-      const int window_button_count = Window_Rect.right / button_width;
+      image_button_count = width / button_width;  // how many images || buttons
+      image_arrays_cords = new int[image_button_count] {};  // here store images || buttons cords
 
       for (i = 0; i < image_button_count; i++)
          image_arrays_cords[i] = button_width * i;  // Set each button cord | location
 
+      // 2.2. Draw image part from file image to app image
       for (i = 0; i < window_button_count; i++)
       {
          Gdiplus::Rect source_rect(image_arrays_cords[image_array_patern[i] ], 0, button_width + 1, height);  // from this rect

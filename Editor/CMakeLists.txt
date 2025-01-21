@@ -7,6 +7,8 @@ include_directories("Include")  # find includes here
 add_executable(Editor
         Include/Window.cpp
         Include/Window.h
+        Include/Engine.cpp
+        Include/Engine.h
 		Include/Main.cpp  # start point
 		Include/Main.h )
 
@@ -18,6 +20,10 @@ source_group("Main" FILES
 source_group("Window" FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/Include/Window.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Include/Window.cpp )
+
+source_group("Engine" FILES 
+		${CMAKE_CURRENT_SOURCE_DIR}/Include/Engine.h
+		${CMAKE_CURRENT_SOURCE_DIR}/Include/Engine.cpp )
 
 #  Добавляем зависимость от библиотеки движка
 target_link_libraries(Editor PRIVATE Engine)
