@@ -76,7 +76,7 @@ void AsEngine::On_LMB_Down()
    if ( !(GetAsyncKeyState(VK_LBUTTON) & 0x8000) )
       return Window->Handle(EWindow_State::Down);  // Clicked Once
    else
-      return Window->Handle(EWindow_State::Hold);  // Holding
+      return Window->Handle(EWindow_State::Hold);  // | Holding || Drag n Drop Window |
 }
 //------------------------------------------------------------------------------------------------------------
 void AsEngine::On_Key_Down()

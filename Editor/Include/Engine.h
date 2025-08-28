@@ -22,6 +22,6 @@ private:
 	ULONG_PTR GDI_Plus_Token;
 	AWindow* Window;
 
-	static AsEngine* Self;
+	static AsEngine *Self;
 };
 //------------------------------------------------------------------------------------------------------------
